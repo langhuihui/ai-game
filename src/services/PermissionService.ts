@@ -125,6 +125,11 @@ export class PermissionService {
 
   // 验证权限
   validatePermission(secretKey: string, requiredPermission: string): boolean {
+    // 首先检查是否为固定超级管理员秘钥
+    if (this.isFixedSuperAdminKey(secretKey)) {
+      return true; // 固定超级管理员拥有所有权限
+    }
+
     const permission = this.getPermissionBySecretKey(secretKey);
     if (!permission) return false;
 
@@ -133,6 +138,11 @@ export class PermissionService {
 
   // 验证最低权限等级
   validateMinimumPermission(secretKey: string, requiredLevel: PermissionLevel): boolean {
+    // 首先检查是否为固定超级管理员秘钥
+    if (this.isFixedSuperAdminKey(secretKey)) {
+      return true; // 固定超级管理员拥有所有权限
+    }
+
     const permission = this.getPermissionBySecretKey(secretKey);
     if (!permission) return false;
 
@@ -146,6 +156,17 @@ export class PermissionService {
     expires_at?: string;
     is_active: boolean;
   } | null {
+    // 首先检查是否为固定超级管理员秘钥
+    if (this.isFixedSuperAdminKey(secretKey)) {
+      const fixedPermission = this.getFixedSuperAdminPermission();
+      return {
+        permission_level: fixedPermission.permission_level,
+        character_id: fixedPermission.character_id,
+        expires_at: fixedPermission.expires_at,
+        is_active: fixedPermission.is_active
+      };
+    }
+
     const permission = this.getPermissionBySecretKey(secretKey);
     if (!permission) return null;
 
@@ -215,5 +236,28 @@ export class PermissionService {
     `);
     const result = stmt.run();
     return result.changes;
+  }
+
+  // 获取固定的超级管理员秘钥
+  getFixedSuperAdminKey(): string {
+    return 'super_admin_fixed_key_2024_ai_game_server_management_only';
+  }
+
+  // 验证是否为固定的超级管理员秘钥
+  isFixedSuperAdminKey(secretKey: string): boolean {
+    return secretKey === this.getFixedSuperAdminKey();
+  }
+
+  // 获取固定超级管理员权限信息
+  getFixedSuperAdminPermission(): Permission {
+    return {
+      id: -1, // 特殊ID表示固定超级管理员
+      character_id: null,
+      permission_level: PermissionLevel.SUPER_ADMIN,
+      secret_key: this.getFixedSuperAdminKey(),
+      created_at: new Date().toISOString(),
+      expires_at: undefined,
+      is_active: true
+    };
   }
 }

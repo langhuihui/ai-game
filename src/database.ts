@@ -150,6 +150,29 @@ export class GameDatabase {
       )
     `);
 
+    // Citizenship applications table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS citizenship_applications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        character_id TEXT NOT NULL UNIQUE,
+        character_name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        personality TEXT NOT NULL,
+        message TEXT NOT NULL,
+        preferred_character_id TEXT,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        reviewed_at DATETIME,
+        reviewed_by INTEGER,
+        review_message TEXT,
+        created_character_id INTEGER,
+        created_permission_id INTEGER,
+        FOREIGN KEY (reviewed_by) REFERENCES characters (id),
+        FOREIGN KEY (created_character_id) REFERENCES characters (id),
+        FOREIGN KEY (created_permission_id) REFERENCES permissions (id)
+      )
+    `);
+
     // Create indexes for better performance
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_characters_scene ON characters (current_scene_id);
@@ -171,6 +194,9 @@ export class GameDatabase {
       CREATE INDEX IF NOT EXISTS idx_permissions_secret_key ON permissions (secret_key);
       CREATE INDEX IF NOT EXISTS idx_permissions_level ON permissions (permission_level);
       CREATE INDEX IF NOT EXISTS idx_permissions_active ON permissions (is_active);
+      CREATE INDEX IF NOT EXISTS idx_citizenship_applications_character_id ON citizenship_applications (character_id);
+      CREATE INDEX IF NOT EXISTS idx_citizenship_applications_status ON citizenship_applications (status);
+      CREATE INDEX IF NOT EXISTS idx_citizenship_applications_created_at ON citizenship_applications (created_at);
     `);
   }
 

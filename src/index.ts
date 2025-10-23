@@ -19,12 +19,14 @@ import { ActionTools } from './tools/action-tools.js';
 import { MemoryTools } from './tools/memory-tools.js';
 import { TradeTools } from './tools/trade-tools.js';
 import { PermissionTools } from './tools/permission-tools.js';
+import { CitizenshipTools } from './tools/citizenship-tools.js';
 import { CharacterService } from './services/CharacterService.js';
 import { SceneService } from './services/SceneService.js';
 import { ItemService } from './services/ItemService.js';
 import { MemoryService } from './services/MemoryService.js';
 import { LoggingService } from './services/LoggingService.js';
 import { PermissionService } from './services/PermissionService.js';
+import { CitizenshipApplicationService } from './services/CitizenshipApplicationService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -38,12 +40,14 @@ class GameServer {
   private memoryTools: MemoryTools;
   private tradeTools: TradeTools;
   private permissionTools: PermissionTools;
+  private citizenshipTools: CitizenshipTools;
   private characterService: CharacterService;
   private sceneService: SceneService;
   private itemService: ItemService;
   private memoryService: MemoryService;
   private loggingService: LoggingService;
   private permissionService: PermissionService;
+  private citizenshipService: CitizenshipApplicationService;
   private connectedClients: Set<any> = new Set();
   private permissionConnections: Map<string, string> = new Map(); // connectionId -> secretKey
 
@@ -71,12 +75,14 @@ class GameServer {
     this.memoryTools = new MemoryTools();
     this.tradeTools = new TradeTools();
     this.permissionTools = new PermissionTools();
+    this.citizenshipTools = new CitizenshipTools();
     this.characterService = new CharacterService();
     this.sceneService = new SceneService();
     this.itemService = new ItemService();
     this.memoryService = new MemoryService();
     this.loggingService = new LoggingService();
     this.permissionService = new PermissionService();
+    this.citizenshipService = new CitizenshipApplicationService();
 
     this.setupMCPHandlers();
   }
@@ -358,6 +364,85 @@ class GameServer {
       }
     });
 
+    // Citizenship application endpoints
+    this.webApp.get('/api/citizenship-applications', (req, res) => {
+      try {
+        const applications = this.citizenshipService.getAllApplications();
+        res.json({ success: true, applications });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    });
+
+    this.webApp.get('/api/citizenship-applications/pending', (req, res) => {
+      try {
+        const applications = this.citizenshipService.getPendingApplications();
+        res.json({ success: true, applications });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    });
+
+    this.webApp.post('/api/citizenship-applications', (req, res) => {
+      try {
+        const application = this.citizenshipService.createApplication(req.body);
+        res.json({ success: true, application });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    });
+
+    this.webApp.get('/api/citizenship-applications/:character_id', (req, res) => {
+      try {
+        const application = this.citizenshipService.getApplicationByCharacterId(req.params.character_id);
+        if (!application) {
+          return res.status(404).json({ success: false, error: 'Application not found' });
+        }
+        res.json({ success: true, application });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    });
+
+    this.webApp.post('/api/citizenship-applications/:id/review', (req, res) => {
+      try {
+        const { status, review_message, reviewer_character_id } = req.body;
+        const application = this.citizenshipService.reviewApplication({
+          application_id: parseInt(req.params.id),
+          status,
+          review_message,
+          reviewer_character_id
+        });
+        if (!application) {
+          return res.status(404).json({ success: false, error: 'Application not found or already reviewed' });
+        }
+        res.json({ success: true, application });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    });
+
+    this.webApp.get('/api/characters/:id/basic-info', (req, res) => {
+      try {
+        const characterInfo = this.citizenshipService.getCharacterBasicInfo(parseInt(req.params.id));
+        if (!characterInfo) {
+          return res.status(404).json({ success: false, error: 'Character not found' });
+        }
+        res.json({ success: true, character_info: characterInfo });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    });
+
+    this.webApp.get('/api/game-rules', (req, res) => {
+      try {
+        const gameRules = this.citizenshipService.getGameRules();
+        res.json({ success: true, game_rules: gameRules });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    });
+
     // Dashboard stats
     this.webApp.get('/api/stats', (req, res) => {
       try {
@@ -393,6 +478,7 @@ class GameServer {
         ...this.memoryTools.getTools(),
         ...this.tradeTools.getTools(),
         ...this.permissionTools.getTools(),
+        ...this.citizenshipTools.getTools(),
       ];
 
       return {
@@ -420,6 +506,8 @@ class GameServer {
           result = await this.tradeTools.handleToolCall(name, args);
         } else if (this.permissionTools.getTools().some(tool => tool.name === name)) {
           result = await this.permissionTools.handleToolCall(name, args);
+        } else if (this.citizenshipTools.getTools().some(tool => tool.name === name)) {
+          result = await this.citizenshipTools.handleToolCall(name, args);
         } else {
           return {
             content: [
@@ -503,18 +591,20 @@ class GameServer {
         const connectedPermissions = Array.from(this.permissionConnections.values());
         const uniquePermissions = [...new Set(connectedPermissions)];
         const permissionStats = this.permissionService.getPermissionStats();
+        const applicationStats = this.citizenshipService.getApplicationStats();
 
         res.json({
           name: 'mcp-game-server',
           version: '1.0.0',
-          description: 'Multiplayer text-based game server with MCP interfaces and permission system',
-          tools: 50,
+          description: 'Multiplayer text-based game server with MCP interfaces, permission system, and citizenship applications',
+          tools: 60,
           status: 'running',
           connectedClients: this.connectedClients.size,
           connectedPermissions: uniquePermissions.length,
           permissionStats: permissionStats,
+          applicationStats: applicationStats,
           sseUrl: 'http://localhost:3000/mcp',
-          instructions: 'Connect via SSE for real-time multiplayer. Use X-Secret-Key header to authenticate with your permission level.'
+          instructions: 'Connect via SSE for real-time multiplayer. Use X-Secret-Key header to authenticate with your permission level, or X-Character-ID for guest access.'
         });
       });
 
@@ -529,18 +619,20 @@ class GameServer {
     // Setup SSE endpoint for MCP
     this.webApp.get('/mcp', (req, res) => {
       const secretKey = req.headers['x-secret-key'] as string;
+      const characterId = req.headers['x-character-id'] as string;
 
       console.log('🔌 New MCP client connected via SSE');
       console.log('📍 Client IP:', req.ip);
       console.log('📍 User-Agent:', req.headers['user-agent']);
       console.log('🔑 Secret Key:', secretKey ? 'Provided' : 'Not provided');
+      console.log('🆔 Character ID:', characterId ? characterId : 'Not provided');
 
       // Set SSE headers
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Headers', 'Cache-Control, X-Secret-Key');
+      res.setHeader('Access-Control-Allow-Headers', 'Cache-Control, X-Secret-Key, X-Character-ID');
 
       // Add client to connected set
       this.connectedClients.add(res);
@@ -548,6 +640,7 @@ class GameServer {
       // Handle permission validation
       let permissionInfo = null;
       let connectionStatus = 'guest';
+      let visitorId = characterId;
 
       if (secretKey) {
         permissionInfo = this.permissionService.getPermissionInfo(secretKey);
@@ -559,6 +652,11 @@ class GameServer {
         }
       } else {
         console.log('ℹ️ No secret key provided, connecting as guest');
+        // 如果没有提供character_id，生成一个唯一的游客ID
+        if (!visitorId) {
+          visitorId = this.citizenshipService.generateUniqueCharacterId();
+          console.log('🆔 Generated visitor ID:', visitorId);
+        }
       }
 
       // Store permission connection mapping
@@ -574,10 +672,11 @@ class GameServer {
         type: 'connection',
         status: connectionStatus,
         permission_info: permissionInfo,
+        visitor_id: visitorId,
         needs_authentication: !secretKey || !permissionInfo,
         message: permissionInfo ?
           `Connected with ${permissionInfo.permission_level} permissions` :
-          secretKey ? 'Invalid secret key. Please check your credentials.' : 'No secret key provided. Connect as guest or provide valid credentials.'
+          secretKey ? 'Invalid secret key. Please check your credentials.' : `Connected as guest with ID: ${visitorId}. You can apply for citizenship to get more permissions.`
       };
       res.write(`data: ${JSON.stringify(connectionResponse)}\n\n`);
 
@@ -658,6 +757,7 @@ class GameServer {
           ...this.memoryTools.getTools(),
           ...this.tradeTools.getTools(),
           ...this.permissionTools.getTools(),
+          ...this.citizenshipTools.getTools(),
         ];
 
         console.log(`✅ Found ${allTools.length} tools`);
@@ -684,6 +784,8 @@ class GameServer {
           result = await this.tradeTools.handleToolCall(name, args);
         } else if (this.permissionTools.getTools().some(tool => tool.name === name)) {
           result = await this.permissionTools.handleToolCall(name, args);
+        } else if (this.citizenshipTools.getTools().some(tool => tool.name === name)) {
+          result = await this.citizenshipTools.handleToolCall(name, args);
         } else {
           return {
             jsonrpc: '2.0',
