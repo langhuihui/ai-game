@@ -94,13 +94,34 @@ The server includes predefined item effects:
 
 The server includes a web interface for monitoring and managing the game world:
 
-### Starting the Web Server
+### Starting the Server
+
+The server provides both MCP tools and Web interface:
+
+**Default mode (Web + MCP info):**
+```bash
+npm run build
+npm start
+```
+
+**MCP stdio mode (for AI agents):**
+```bash
+npm run build
+npm run start:stdio
+```
+
+**Web only mode:**
 ```bash
 npm run build
 npm run start:web
 ```
 
-Then open http://localhost:3000 in your browser.
+This will start:
+- **Web Interface**: Available at http://localhost:3000
+- **MCP Info**: Available at http://localhost:3000/mcp
+- **MCP Tools**: Available via stdio when using `--stdio` mode
+
+Open http://localhost:3000 in your browser to access the web interface and MCP configuration.
 
 ### Web Interface Features
 - **Dashboard**: Overview of game statistics and recent activity
@@ -173,8 +194,9 @@ Then open http://localhost:3000 in your browser.
 
 - `npm run build`: Compile TypeScript
 - `npm run dev`: Watch mode compilation
-- `npm start`: Run the MCP server
-- `npm run start:web`: Run the web interface server
+- `npm start`: Run the server (Web interface + MCP info)
+- `npm run start:stdio`: Run MCP server in stdio mode
+- `npm run start:web`: Run web interface only
 
 ## License
 

@@ -45,6 +45,13 @@ function showLogs() {
   loadLogs();
 }
 
+function showMCPConfig() {
+  hideAllSections();
+  document.getElementById('mcp-config').style.display = 'block';
+  updateActiveNav('mcp-config');
+  loadMCPConfig();
+}
+
 function hideAllSections() {
   const sections = document.querySelectorAll('.content-section');
   sections.forEach(section => section.style.display = 'none');
@@ -54,7 +61,13 @@ function updateActiveNav(activeSection) {
   const navLinks = document.querySelectorAll('.nav-link');
   navLinks.forEach(link => link.classList.remove('active'));
 
-  const activeLink = document.querySelector(`[onclick="show${activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}()"]`);
+  let activeLink;
+  if (activeSection === 'mcp-config') {
+    activeLink = document.querySelector('[onclick="showMCPConfig()"]');
+  } else {
+    activeLink = document.querySelector(`[onclick="show${activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}()"]`);
+  }
+
   if (activeLink) {
     activeLink.classList.add('active');
   }
@@ -434,4 +447,98 @@ function showAlert(type, message) {
   setTimeout(() => {
     alertDiv.remove();
   }, 5000);
+}
+
+// MCP Config functions
+async function loadMCPConfig() {
+  // Update server start time
+  document.getElementById('serverStartTime').textContent = new Date().toLocaleString('zh-CN');
+
+  // Load tools list
+  await loadToolsList();
+}
+
+async function loadToolsList() {
+  // Define all available tools
+  const tools = [
+    // Character tools
+    { name: 'create_character', description: '创建角色', category: '角色管理' },
+    { name: 'get_character', description: '获取角色信息', category: '角色管理' },
+    { name: 'get_character_by_name', description: '通过名称获取角色', category: '角色管理' },
+    { name: 'list_characters', description: '列出所有角色', category: '角色管理' },
+    { name: 'update_character', description: '更新角色信息', category: '角色管理' },
+
+    // Scene tools
+    { name: 'create_scene', description: '创建场景', category: '场景管理' },
+    { name: 'get_scene', description: '获取场景信息', category: '场景管理' },
+    { name: 'get_scene_by_name', description: '通过名称获取场景', category: '场景管理' },
+    { name: 'get_scene_details', description: '获取场景详情', category: '场景管理' },
+    { name: 'list_scenes', description: '列出所有场景', category: '场景管理' },
+    { name: 'connect_scenes', description: '连接场景', category: '场景管理' },
+    { name: 'get_scene_connections', description: '获取场景连接', category: '场景管理' },
+
+    // Action tools
+    { name: 'move_character', description: '移动角色', category: '行动系统' },
+    { name: 'speak_public', description: '公共发言', category: '行动系统' },
+    { name: 'speak_private', description: '私下对话', category: '行动系统' },
+    { name: 'pick_item', description: '拾取物品', category: '行动系统' },
+    { name: 'drop_item', description: '放下物品', category: '行动系统' },
+    { name: 'use_item', description: '使用物品', category: '行动系统' },
+    { name: 'create_item', description: '创建物品', category: '行动系统' },
+    { name: 'get_character_items', description: '获取角色物品', category: '行动系统' },
+
+    // Memory tools
+    { name: 'add_short_memory', description: '添加短时记忆', category: '记忆管理' },
+    { name: 'add_long_memory', description: '添加长时记忆', category: '记忆管理' },
+    { name: 'get_short_memories', description: '获取短时记忆', category: '记忆管理' },
+    { name: 'get_long_memories', description: '获取长时记忆', category: '记忆管理' },
+    { name: 'get_all_memories', description: '获取所有记忆', category: '记忆管理' },
+    { name: 'update_short_memory', description: '更新短时记忆', category: '记忆管理' },
+    { name: 'update_long_memory', description: '更新长时记忆', category: '记忆管理' },
+    { name: 'delete_short_memory', description: '删除短时记忆', category: '记忆管理' },
+    { name: 'delete_long_memory', description: '删除长时记忆', category: '记忆管理' },
+    { name: 'delete_all_memories', description: '删除所有记忆', category: '记忆管理' }
+  ];
+
+  const container = document.getElementById('toolsList');
+  const categories = [...new Set(tools.map(tool => tool.category))];
+
+  container.innerHTML = categories.map(category => {
+    const categoryTools = tools.filter(tool => tool.category === category);
+    return `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">${category}</h6>
+                    </div>
+                    <div class="card-body">
+                        ${categoryTools.map(tool => `
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <code class="text-primary">${tool.name}</code>
+                                    <br>
+                                    <small class="text-muted">${tool.description}</small>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+  }).join('');
+
+  // Update total tools count
+  document.getElementById('totalTools').textContent = tools.length;
+}
+
+function copyToClipboard(elementId) {
+  const element = document.getElementById(elementId);
+  const text = element.textContent;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showAlert('success', '配置已复制到剪贴板！');
+  }).catch(err => {
+    console.error('复制失败:', err);
+    showAlert('error', '复制失败，请手动复制');
+  });
 }

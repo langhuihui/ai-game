@@ -317,6 +317,13 @@ export class ActionTools {
 
           const item = this.itemService.pickItem(args.item_id, args.character_id);
 
+          if (!item) {
+            return {
+              success: false,
+              error: 'Failed to pick up item'
+            };
+          }
+
           // Add memory about picking up the item
           this.memoryService.addActionMemory(
             args.character_id,
@@ -354,6 +361,13 @@ export class ActionTools {
           }
 
           const item = this.itemService.dropItem(args.item_id, character.current_scene_id);
+
+          if (!item) {
+            return {
+              success: false,
+              error: 'Failed to drop item'
+            };
+          }
 
           // Add memory about dropping the item
           this.memoryService.addActionMemory(

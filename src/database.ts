@@ -19,6 +19,7 @@ export class GameDatabase {
         personality TEXT NOT NULL,
         health INTEGER NOT NULL DEFAULT 100,
         mental_state INTEGER NOT NULL DEFAULT 100,
+        currency INTEGER NOT NULL DEFAULT 1000,
         current_scene_id INTEGER,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (current_scene_id) REFERENCES scenes (id)
@@ -101,6 +102,54 @@ export class GameDatabase {
       )
     `);
 
+    // Trade offers table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS trade_offers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        from_character_id INTEGER NOT NULL,
+        to_character_id INTEGER NOT NULL,
+        currency_amount INTEGER NOT NULL DEFAULT 0,
+        item_id INTEGER,
+        message TEXT,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'cancelled')),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        responded_at DATETIME,
+        FOREIGN KEY (from_character_id) REFERENCES characters (id),
+        FOREIGN KEY (to_character_id) REFERENCES characters (id),
+        FOREIGN KEY (item_id) REFERENCES items (id)
+      )
+    `);
+
+    // Direct messages table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS direct_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        from_character_id INTEGER NOT NULL,
+        to_character_id INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        scene_id INTEGER NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        read BOOLEAN NOT NULL DEFAULT FALSE,
+        FOREIGN KEY (from_character_id) REFERENCES characters (id),
+        FOREIGN KEY (to_character_id) REFERENCES characters (id),
+        FOREIGN KEY (scene_id) REFERENCES scenes (id)
+      )
+    `);
+
+    // Permissions table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS permissions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        character_id INTEGER,
+        permission_level TEXT NOT NULL CHECK (permission_level IN ('prisoner', 'visitor', 'citizen', 'manager', 'super_admin')),
+        secret_key TEXT NOT NULL UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        expires_at DATETIME,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY (character_id) REFERENCES characters (id)
+      )
+    `);
+
     // Create indexes for better performance
     this.db.exec(`
       CREATE INDEX IF NOT EXISTS idx_characters_scene ON characters (current_scene_id);
@@ -112,6 +161,16 @@ export class GameDatabase {
       CREATE INDEX IF NOT EXISTS idx_long_memories_character ON long_memories (character_id);
       CREATE INDEX IF NOT EXISTS idx_action_logs_character ON action_logs (character_id);
       CREATE INDEX IF NOT EXISTS idx_action_logs_timestamp ON action_logs (timestamp);
+      CREATE INDEX IF NOT EXISTS idx_trade_offers_from ON trade_offers (from_character_id);
+      CREATE INDEX IF NOT EXISTS idx_trade_offers_to ON trade_offers (to_character_id);
+      CREATE INDEX IF NOT EXISTS idx_trade_offers_status ON trade_offers (status);
+      CREATE INDEX IF NOT EXISTS idx_direct_messages_from ON direct_messages (from_character_id);
+      CREATE INDEX IF NOT EXISTS idx_direct_messages_to ON direct_messages (to_character_id);
+      CREATE INDEX IF NOT EXISTS idx_direct_messages_scene ON direct_messages (scene_id);
+      CREATE INDEX IF NOT EXISTS idx_permissions_character ON permissions (character_id);
+      CREATE INDEX IF NOT EXISTS idx_permissions_secret_key ON permissions (secret_key);
+      CREATE INDEX IF NOT EXISTS idx_permissions_level ON permissions (permission_level);
+      CREATE INDEX IF NOT EXISTS idx_permissions_active ON permissions (is_active);
     `);
   }
 

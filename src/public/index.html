@@ -75,6 +75,9 @@
           <a class="nav-link" href="#" onclick="showLogs()">
             <i class="bi bi-journal-text"></i> 行为日志
           </a>
+          <a class="nav-link" href="#" onclick="showMCPConfig()">
+            <i class="bi bi-gear"></i> MCP 配置
+          </a>
         </nav>
       </div>
 
@@ -211,6 +214,102 @@
             </div>
           </div>
           <div id="logsList"></div>
+        </div>
+
+        <!-- MCP Config -->
+        <div id="mcp-config" class="content-section" style="display: none;">
+          <h2 class="mb-4">MCP 工具配置</h2>
+
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>使用说明：</strong> 选择适合你的配置方式。推荐使用 stdio 模式，更稳定可靠。
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h4>SSE 配置 (推荐)</h4>
+              <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <span>mcp.json</span>
+                  <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('sseConfig')">
+                    <i class="bi bi-clipboard"></i> 复制
+                  </button>
+                </div>
+                <div class="card-body">
+                  <pre id="sseConfig" class="mb-0"><code>{
+  "mcpServers": {
+    "game-server": {
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}</code></pre>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <h4>启动说明</h4>
+              <div class="card">
+                <div class="card-body">
+                  <h6>1. 启动游戏服务器</h6>
+                  <pre class="bg-light p-2 rounded"><code>npm start</code></pre>
+
+                  <h6 class="mt-3">2. 复制上面的配置到 mcp.json</h6>
+
+                  <h6 class="mt-3">3. 重启 Cursor 编辑器</h6>
+
+                  <div class="alert alert-success mt-3">
+                    <i class="bi bi-check-circle"></i>
+                    <strong>优势：</strong> SSE 连接支持真正的多人联机，所有客户端共享同一个游戏世界！
+                  </div>
+
+                  <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>注意：</strong> 确保游戏服务器正在运行，否则 MCP 工具将无法使用。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-12">
+              <h4>可用工具列表</h4>
+              <div class="card">
+                <div class="card-body">
+                  <div class="row" id="toolsList">
+                    <!-- Tools will be loaded here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-12">
+              <h4>服务器信息</h4>
+              <div class="card">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p><strong>服务器名称：</strong> mcp-game-server</p>
+                      <p><strong>版本：</strong> 1.0.0</p>
+                      <p><strong>协议：</strong> stdio</p>
+                    </div>
+                    <div class="col-md-6">
+                      <p><strong>工具总数：</strong> <span id="totalTools">30</span></p>
+                      <p><strong>状态：</strong> <span class="badge bg-success">运行中</span></p>
+                      <p><strong>启动时间：</strong> <span id="serverStartTime">-</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
