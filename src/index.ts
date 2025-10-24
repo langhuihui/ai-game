@@ -33,6 +33,7 @@ import { IdentityService } from './services/IdentityService.js';
 import { CitizenshipApplicationService } from './services/CitizenshipApplicationService.js';
 import { ToolRouter } from './utils/ToolRouter.js';
 import { ApiResponseHandler } from './utils/ApiResponseHandler.js';
+import { i18n } from './services/I18nService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,7 +64,7 @@ class GameServer {
     // Initialize MCP Server
     this.mcpServer = new Server(
       {
-        name: 'mcp-game-server',
+        name: 'matrix-game',
         version: '1.0.0',
       },
       {
@@ -490,6 +491,27 @@ class GameServer {
       }
     });
 
+    // Get tools list (for MCP Config page)
+    this.webApp.get('/api/tools', (req, res) => {
+      try {
+        const allTools = this.toolRouter.getAllTools();
+
+        // Filter out super admin tools for web display
+        const superAdminToolNames = [
+          ...this.superAdminTools.getTools().map(t => t.name),
+          ...this.superAdminResourceTools.getTools().map(t => t.name)
+        ];
+        const regularTools = allTools.filter(tool => !superAdminToolNames.includes(tool.name));
+
+        res.json({
+          success: true,
+          tools: regularTools
+        });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+    });
+
     // Admin routes can be added here if needed
   }
 
@@ -659,28 +681,28 @@ class GameServer {
 
     if (isWebMode) {
       // Web mode - show all logs
-      console.log('🚀 Starting Game Server in Web mode...');
+      console.log(i18n.t('server.webMode'));
       this.setupWebApp();
-      console.log('🌐 Web interface available at http://localhost:3000');
-      console.log('✅ Server started successfully!');
+      console.log(i18n.t('server.webInterface'));
+      console.log(i18n.t('server.started'));
     } else if (isStdioMode) {
       // Stdio mode - for direct MCP client connection
-      console.error('🚀 Starting MCP Game Server in stdio mode...');
+      console.error(i18n.t('server.stdioMode'));
       const transport = new StdioServerTransport();
       await this.mcpServer.connect(transport);
-      console.error('🔧 MCP Game Server running on stdio');
-      console.error('✅ MCP Server started successfully!');
+      console.error(i18n.t('server.mcpStdio'));
+      console.error(i18n.t('server.mcpStarted'));
     } else {
       // Default mode - start both Web interface and MCP server with SSE
-      console.log('🚀 Starting Game Server...');
+      console.log(i18n.t('server.starting'));
 
       // Start Web interface
       this.setupWebApp();
-      console.log('🌐 Web interface available at http://localhost:3000');
+      console.log(i18n.t('server.webInterface'));
 
       // Setup SSE server for MCP connections
       this.setupSSEServer();
-      console.log('🔧 MCP SSE server available at http://localhost:3000/mcp');
+      console.log(i18n.t('server.mcpSse'));
 
       // Add MCP info endpoint
       this.webApp.get('/mcp-info', (req, res) => {
@@ -690,7 +712,7 @@ class GameServer {
         const applicationStats = this.citizenshipService.getApplicationStats();
 
         res.json({
-          name: 'mcp-game-server',
+          name: 'matrix-game',
           version: '1.0.0',
           description: 'Multiplayer text-based game server with MCP interfaces, permission system, and citizenship applications',
           tools: this.toolRouter.getAllTools().length,
@@ -778,7 +800,7 @@ class GameServer {
 
       // Super admin tools are handled through the main MCP handler with permission checks
 
-      console.log('✅ Server started successfully!');
+      console.log(i18n.t('server.started'));
       console.log('   - Web interface: http://localhost:3000');
       console.log('   - MCP SSE: http://localhost:3000/mcp');
       console.log('   - Connected clients: 0');
@@ -941,7 +963,7 @@ class GameServer {
               resources: {}
             },
             serverInfo: {
-              name: 'mcp-game-server',
+              name: 'matrix-game',
               version: '1.0.0'
             }
           }

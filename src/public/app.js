@@ -459,76 +459,147 @@ async function loadMCPConfig() {
 }
 
 async function loadToolsList() {
-  // Define all available tools
-  const tools = [
-    // Character tools
-    { name: 'create_character', description: '创建角色', category: '角色管理' },
-    { name: 'get_character', description: '获取角色信息', category: '角色管理' },
-    { name: 'get_character_by_name', description: '通过名称获取角色', category: '角色管理' },
-    { name: 'list_characters', description: '列出所有角色', category: '角色管理' },
-    { name: 'update_character', description: '更新角色信息', category: '角色管理' },
-
-    // Scene tools
-    { name: 'create_scene', description: '创建场景', category: '场景管理' },
-    { name: 'get_scene', description: '获取场景信息', category: '场景管理' },
-    { name: 'get_scene_by_name', description: '通过名称获取场景', category: '场景管理' },
-    { name: 'get_scene_details', description: '获取场景详情', category: '场景管理' },
-    { name: 'list_scenes', description: '列出所有场景', category: '场景管理' },
-    { name: 'connect_scenes', description: '连接场景', category: '场景管理' },
-    { name: 'get_scene_connections', description: '获取场景连接', category: '场景管理' },
-
-    // Action tools
-    { name: 'move_character', description: '移动角色', category: '行动系统' },
-    { name: 'speak_public', description: '公共发言', category: '行动系统' },
-    { name: 'speak_private', description: '私下对话', category: '行动系统' },
-    { name: 'pick_item', description: '拾取物品', category: '行动系统' },
-    { name: 'drop_item', description: '放下物品', category: '行动系统' },
-    { name: 'use_item', description: '使用物品', category: '行动系统' },
-    { name: 'create_item', description: '创建物品', category: '行动系统' },
-    { name: 'get_character_items', description: '获取角色物品', category: '行动系统' },
-
-    // Memory tools
-    { name: 'add_short_memory', description: '添加短时记忆', category: '记忆管理' },
-    { name: 'add_long_memory', description: '添加长时记忆', category: '记忆管理' },
-    { name: 'get_short_memories', description: '获取短时记忆', category: '记忆管理' },
-    { name: 'get_long_memories', description: '获取长时记忆', category: '记忆管理' },
-    { name: 'get_all_memories', description: '获取所有记忆', category: '记忆管理' },
-    { name: 'update_short_memory', description: '更新短时记忆', category: '记忆管理' },
-    { name: 'update_long_memory', description: '更新长时记忆', category: '记忆管理' },
-    { name: 'delete_short_memory', description: '删除短时记忆', category: '记忆管理' },
-    { name: 'delete_long_memory', description: '删除长时记忆', category: '记忆管理' },
-    { name: 'delete_all_memories', description: '删除所有记忆', category: '记忆管理' }
-  ];
-
   const container = document.getElementById('toolsList');
-  const categories = [...new Set(tools.map(tool => tool.category))];
 
-  container.innerHTML = categories.map(category => {
-    const categoryTools = tools.filter(tool => tool.category === category);
-    return `
-            <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="mb-0">${category}</h6>
-                    </div>
-                    <div class="card-body">
-                        ${categoryTools.map(tool => `
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div>
-                                    <code class="text-primary">${tool.name}</code>
-                                    <br>
-                                    <small class="text-muted">${tool.description}</small>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-  }).join('');
+  try {
+    // Fetch tools from API
+    const data = await apiCall('/tools');
+    if (!data || !data.tools) {
+      throw new Error('Failed to load tools');
+    }
 
-  // Update total tools count
-  document.getElementById('totalTools').textContent = tools.length;
+    // Filter out super admin tools (additional client-side filtering for security)
+    const superAdminToolPrefixes = [
+      'admin_',
+      'mcp_admin_'
+    ];
+
+    const tools = data.tools.filter(tool => {
+      // Check if tool name starts with any super admin prefix
+      return !superAdminToolPrefixes.some(prefix => tool.name.startsWith(prefix));
+    });
+
+    // Define category mapping for tool names
+    const categoryMap = {
+      // Character tools
+      'create_character': '角色管理',
+      'get_character': '角色管理',
+      'get_character_by_name': '角色管理',
+      'list_characters': '角色管理',
+      'update_character': '角色管理',
+      'delete_character': '角色管理',
+
+      // Scene tools
+      'create_scene': '场景管理',
+      'get_scene': '场景管理',
+      'get_scene_by_name': '场景管理',
+      'get_scene_details': '场景管理',
+      'list_scenes': '场景管理',
+      'connect_scenes': '场景管理',
+      'get_scene_connections': '场景管理',
+
+      // Action tools
+      'move_character': '行动系统',
+      'speak_public': '行动系统',
+      'speak_private': '行动系统',
+      'pick_item': '行动系统',
+      'drop_item': '行动系统',
+      'use_item': '行动系统',
+      'get_character_items': '行动系统',
+
+      // Item tools
+      'create_item': '物品管理',
+      'get_item': '物品管理',
+      'list_items': '物品管理',
+      'update_item': '物品管理',
+      'delete_item': '物品管理',
+
+      // Memory tools
+      'add_short_memory': '记忆管理',
+      'add_long_memory': '记忆管理',
+      'get_short_memories': '记忆管理',
+      'get_long_memories': '记忆管理',
+      'get_all_memories': '记忆管理',
+      'update_short_memory': '记忆管理',
+      'update_long_memory': '记忆管理',
+      'delete_short_memory': '记忆管理',
+      'delete_long_memory': '记忆管理',
+      'delete_all_memories': '记忆管理',
+
+      // Trade tools
+      'create_trade_offer': '交易系统',
+      'respond_to_trade_offer': '交易系统',
+      'cancel_trade_offer': '交易系统',
+      'get_trade_offers': '交易系统',
+      'get_pending_trade_offers': '交易系统',
+
+      // Message tools
+      'send_direct_message': '消息系统',
+      'get_direct_messages': '消息系统',
+      'mark_message_as_read': '消息系统',
+      'mark_all_messages_as_read': '消息系统',
+
+      // Identity tools
+      'validate_identity': '身份管理',
+      'apply_for_citizenship': '身份管理',
+      'review_citizenship_application': '身份管理',
+      'generate_visitor_id': '身份管理',
+      'list_citizenship_applications': '身份管理',
+
+      // Resource tools
+      'mcp_list_resources': 'MCP资源',
+      'mcp_read_resource': 'MCP资源',
+      'mcp_list_prompts': 'MCP资源',
+      'mcp_get_prompt': 'MCP资源'
+    };
+
+    // Add category to each tool
+    const toolsWithCategory = tools.map(tool => ({
+      name: tool.name,
+      description: tool.description || '无描述',
+      category: categoryMap[tool.name] || '其他'
+    }));
+
+    // Group by category
+    const categories = [...new Set(toolsWithCategory.map(tool => tool.category))];
+
+    container.innerHTML = categories.map(category => {
+      const categoryTools = toolsWithCategory.filter(tool => tool.category === category);
+      return `
+              <div class="col-md-6 col-lg-4 mb-3">
+                  <div class="card">
+                      <div class="card-header">
+                          <h6 class="mb-0">${category}</h6>
+                      </div>
+                      <div class="card-body">
+                          ${categoryTools.map(tool => `
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                  <div>
+                                      <code class="text-primary">${tool.name}</code>
+                                      <br>
+                                      <small class="text-muted">${tool.description}</small>
+                                  </div>
+                              </div>
+                          `).join('')}
+                      </div>
+                  </div>
+              </div>
+          `;
+    }).join('');
+
+    // Update total tools count
+    document.getElementById('totalTools').textContent = tools.length;
+  } catch (error) {
+    console.error('Failed to load tools:', error);
+    container.innerHTML = `
+      <div class="col-12">
+        <div class="alert alert-danger">
+          加载工具列表失败: ${error.message}
+        </div>
+      </div>
+    `;
+    document.getElementById('totalTools').textContent = '0';
+  }
 }
 
 function copyToClipboard(elementId) {

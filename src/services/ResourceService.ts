@@ -6,6 +6,7 @@ import { MemoryService } from './MemoryService.js';
 import { LoggingService } from './LoggingService.js';
 import { IdentityService } from './IdentityService.js';
 import { CitizenshipApplicationService } from './CitizenshipApplicationService.js';
+import { i18n } from './I18nService.js';
 
 export interface GameResource {
   uri: string;
@@ -48,170 +49,170 @@ export class ResourceService {
       // 角色相关资源
       {
         uri: 'game://characters/all',
-        name: '所有角色',
-        description: '获取游戏中所有角色的详细信息',
+        name: i18n.t('resources.characters.all.name'),
+        description: i18n.t('resources.characters.all.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://character/{name}',
-        name: '单个角色',
-        description: '获取指定角色的完整数据（使用角色名称替换{name}）',
+        name: i18n.t('resources.characters.single.name'),
+        description: i18n.t('resources.characters.single.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://characters/stats',
-        name: '角色统计',
-        description: '获取角色的统计信息和概览',
+        name: i18n.t('resources.characters.stats.name'),
+        description: i18n.t('resources.characters.stats.description'),
         mimeType: 'application/json'
       },
 
       // 场景相关资源
       {
         uri: 'game://scenes/all',
-        name: '所有场景',
-        description: '获取游戏中所有场景的详细信息',
+        name: i18n.t('resources.scenes.all.name'),
+        description: i18n.t('resources.scenes.all.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://scene/{name}',
-        name: '单个场景',
-        description: '获取指定场景的完整数据（使用场景名称替换{name}）',
+        name: i18n.t('resources.scenes.single.name'),
+        description: i18n.t('resources.scenes.single.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://scenes/connections',
-        name: '场景连接',
-        description: '获取所有场景之间的连接关系',
+        name: i18n.t('resources.scenes.connections.name'),
+        description: i18n.t('resources.scenes.connections.description'),
         mimeType: 'application/json'
       },
 
       // 物品相关资源
       {
         uri: 'game://items/all',
-        name: '所有物品',
-        description: '获取游戏中所有物品的详细信息',
+        name: i18n.t('resources.items.all.name'),
+        description: i18n.t('resources.items.all.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://item/{id}',
-        name: '单个物品',
-        description: '获取指定物品的详细信息（使用物品ID替换{id}）',
+        name: i18n.t('resources.items.single.name'),
+        description: i18n.t('resources.items.single.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://items/distribution',
-        name: '物品分布',
-        description: '获取物品在场景和角色中的分布情况',
+        name: i18n.t('resources.items.distribution.name'),
+        description: i18n.t('resources.items.distribution.description'),
         mimeType: 'application/json'
       },
 
       // 记忆相关资源
       {
         uri: 'game://memories/recent',
-        name: '最近记忆',
-        description: '获取所有角色最近的记忆活动',
+        name: i18n.t('resources.memories.recent.name'),
+        description: i18n.t('resources.memories.recent.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://character/{name}/memories',
-        name: '角色记忆',
-        description: '获取指定角色的所有记忆（使用角色名称替换{name}）',
+        name: i18n.t('resources.memories.character.name'),
+        description: i18n.t('resources.memories.character.description'),
         mimeType: 'application/json'
       },
 
       // 活动日志资源
       {
         uri: 'game://logs/recent',
-        name: '最近活动',
-        description: '获取游戏中的最近活动日志',
+        name: i18n.t('resources.logs.recent.name'),
+        description: i18n.t('resources.logs.recent.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://logs/character-activity',
-        name: '角色活动',
-        description: '获取所有角色的活动统计',
+        name: i18n.t('resources.logs.characterActivity.name'),
+        description: i18n.t('resources.logs.characterActivity.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://character/{name}/activity',
-        name: '角色活动历史',
-        description: '获取指定角色的活动历史（使用角色名称替换{name}）',
+        name: i18n.t('resources.logs.characterHistory.name'),
+        description: i18n.t('resources.logs.characterHistory.description'),
         mimeType: 'application/json'
       },
 
       // 交易相关资源
       {
         uri: 'game://trade/offers',
-        name: '交易报价',
-        description: '获取当前所有的交易报价',
+        name: i18n.t('resources.trade.offers.name'),
+        description: i18n.t('resources.trade.offers.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://trade/history',
-        name: '交易历史',
-        description: '获取交易的历史记录',
+        name: i18n.t('resources.trade.history.name'),
+        description: i18n.t('resources.trade.history.description'),
         mimeType: 'application/json'
       },
 
       // 权限相关资源
       {
         uri: 'game://identities/all',
-        name: '身份信息',
-        description: '获取所有身份和角色身份信息',
+        name: i18n.t('resources.identities.all.name'),
+        description: i18n.t('resources.identities.all.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://identities/stats',
-        name: '身份统计',
-        description: '获取身份系统的统计信息',
+        name: i18n.t('resources.identities.stats.name'),
+        description: i18n.t('resources.identities.stats.description'),
         mimeType: 'application/json'
       },
 
       // 公民申请相关资源
       {
         uri: 'game://citizenship/applications',
-        name: '公民申请',
-        description: '获取所有公民申请的信息',
+        name: i18n.t('resources.citizenship.applications.name'),
+        description: i18n.t('resources.citizenship.applications.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://citizenship/application/{character_id}',
-        name: '单个公民申请',
-        description: '获取指定角色的公民申请状态（使用character_id替换{character_id}）',
+        name: i18n.t('resources.citizenship.single.name'),
+        description: i18n.t('resources.citizenship.single.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://citizenship/stats',
-        name: '公民统计',
-        description: '获取公民申请的统计信息',
+        name: i18n.t('resources.citizenship.stats.name'),
+        description: i18n.t('resources.citizenship.stats.description'),
         mimeType: 'application/json'
       },
 
       // 游戏信息资源
       {
         uri: 'game://info/rules',
-        name: '游戏规则',
-        description: '获取游戏规则和玩法信息',
+        name: i18n.t('resources.info.rules.name'),
+        description: i18n.t('resources.info.rules.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://character/{id}/basic-info',
-        name: '角色基本信息',
-        description: '获取角色的基本信息（ID和权限等级，使用角色ID替换{id}）',
+        name: i18n.t('resources.info.basicInfo.name'),
+        description: i18n.t('resources.info.basicInfo.description'),
         mimeType: 'application/json'
       },
 
       // 游戏状态资源
       {
         uri: 'game://state/overview',
-        name: '游戏概览',
-        description: '获取游戏的总体状态概览',
+        name: i18n.t('resources.state.overview.name'),
+        description: i18n.t('resources.state.overview.description'),
         mimeType: 'application/json'
       },
       {
         uri: 'game://state/world-map',
-        name: '世界地图',
-        description: '获取游戏世界的完整地图结构',
+        name: i18n.t('resources.state.worldMap.name'),
+        description: i18n.t('resources.state.worldMap.description'),
         mimeType: 'application/json'
       }
     ];
@@ -458,7 +459,7 @@ export class ResourceService {
         };
 
       default:
-        throw new Error(`Resource not found: ${uri}`);
+        throw new Error(i18n.t('errors.resourceNotFound', { uri }));
     }
   }
 
@@ -644,7 +645,7 @@ export class ResourceService {
   private async getCharacterResource(characterName: string): Promise<ResourceContent> {
     const character = this.characterService.getCharacterByName(characterName);
     if (!character) {
-      throw new Error(`Character "${characterName}" not found`);
+      throw new Error(i18n.t('errors.characterNotFound', { name: characterName }));
     }
 
     // 获取角色的物品
@@ -689,7 +690,7 @@ export class ResourceService {
   private async getSceneResource(sceneName: string): Promise<ResourceContent> {
     const scene = this.sceneService.getSceneByName(sceneName);
     if (!scene) {
-      throw new Error(`Scene "${sceneName}" not found`);
+      throw new Error(i18n.t('errors.sceneNotFound', { name: sceneName }));
     }
 
     // 获取场景中的角色
@@ -736,7 +737,7 @@ export class ResourceService {
   private async getItemResource(itemId: number): Promise<ResourceContent> {
     const item = this.itemService.getItemById(itemId);
     if (!item) {
-      throw new Error(`Item with ID ${itemId} not found`);
+      throw new Error(i18n.t('errors.itemNotFound', { id: itemId }));
     }
 
     // 获取物品的位置信息
@@ -772,7 +773,7 @@ export class ResourceService {
   private async getCharacterMemoriesResource(characterName: string): Promise<ResourceContent> {
     const character = this.characterService.getCharacterByName(characterName);
     if (!character) {
-      throw new Error(`Character "${characterName}" not found`);
+      throw new Error(i18n.t('errors.characterNotFound', { name: characterName }));
     }
 
     const shortMemories = this.memoryService.getShortMemories(character.id);
@@ -798,7 +799,7 @@ export class ResourceService {
   private async getCharacterActivityResource(characterName: string): Promise<ResourceContent> {
     const character = this.characterService.getCharacterByName(characterName);
     if (!character) {
-      throw new Error(`Character "${characterName}" not found`);
+      throw new Error(i18n.t('errors.characterNotFound', { name: characterName }));
     }
 
     const db = gameDb.getDatabase();
@@ -838,7 +839,7 @@ export class ResourceService {
   private async getCharacterBasicInfoResource(characterId: number): Promise<ResourceContent> {
     const characterInfo = this.citizenshipService.getCharacterBasicInfo(characterId);
     if (!characterInfo) {
-      throw new Error(`Character with ID ${characterId} not found`);
+      throw new Error(i18n.t('errors.characterNotFound', { name: String(characterId) }));
     }
 
     return {
@@ -857,7 +858,7 @@ export class ResourceService {
   private async getCitizenshipApplicationResource(characterId: string): Promise<ResourceContent> {
     const application = this.citizenshipService.getApplicationByCharacterId(characterId);
     if (!application) {
-      throw new Error(`No citizenship application found for character ID: ${characterId}`);
+      throw new Error(i18n.t('errors.noCitizenshipApplication', { characterId }));
     }
 
     return {

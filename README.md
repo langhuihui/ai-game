@@ -2,6 +2,18 @@
 
 A multiplayer text-based game server built with Node.js and the Model Context Protocol (MCP). This server provides MCP interfaces for controlling characters, managing scenes, handling actions, and managing character memories in a text-based game world.
 
+## 🌍 Internationalization (国际化)
+
+This server supports **automatic language detection** and returns content in the appropriate language based on your operating system settings.
+
+**Supported Languages**:
+- 🇨🇳 Chinese (中文)
+- 🇺🇸 English
+
+The server automatically detects your system language on startup. All MCP resources, error messages, and server messages are internationalized.
+
+📖 **Documentation**: See [I18N-README.md](./I18N-README.md) for detailed i18n usage and implementation.
+
 ## Features
 
 - **Character Management**: Create, update, and manage game characters with health, mental state, and personality
