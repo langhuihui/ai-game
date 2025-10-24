@@ -4,6 +4,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 import express from 'express';
 import cors from 'cors';
@@ -198,7 +199,7 @@ export class SuperAdminServer implements ToolHandler {
   }
 
   // 获取超级管理员工具
-  getTools() {
+  getTools(): Tool[] {
     const adminTools = this.superAdminTools.getTools();
     const resourceTools = this.superAdminResourceTools.getTools();
     console.log('SuperAdmin tools:', adminTools.length);
@@ -210,7 +211,7 @@ export class SuperAdminServer implements ToolHandler {
   }
 
   // 获取超级管理员工具（保持向后兼容）
-  getSuperAdminTools() {
+  getSuperAdminTools(): Tool[] {
     return this.superAdminTools.getTools();
   }
 
