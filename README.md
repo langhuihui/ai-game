@@ -28,9 +28,22 @@ npm run build
 npm start
 ```
 
+## Server Architecture
+
+The project consists of a single server with two MCP endpoints:
+
+### Main Game Server (Port 3000)
+- **Main MCP URL**: `http://localhost:3000/mcp`
+- **Super Admin MCP URL**: `http://localhost:3000/admin/mcp`
+- **Purpose**: General game operations, character management, scene interactions
+- **Tools**: 60+ tools total (53+ game tools + 7 admin tools)
+- **Access**: Super Admin tools require Super Admin secret key
+
 ## MCP Tools
 
-### Character Management
+### Main Game Server Tools (53+ tools)
+
+#### Character Management
 - `create_character`: Create a new character
 - `get_character`: Get character by ID
 - `get_character_by_name`: Get character by name
@@ -61,12 +74,23 @@ npm start
 - `add_long_memory`: Add long-term memory
 - `get_short_memories`: Get short-term memories
 - `get_long_memories`: Get long-term memories
-- `get_all_memories`: Get all memories
 - `update_short_memory`: Update short-term memory
 - `update_long_memory`: Update long-term memory
 - `delete_short_memory`: Delete short-term memory
 - `delete_long_memory`: Delete long-term memory
-- `delete_all_memories`: Delete all memories for character
+
+### Super Admin Server Tools (7 tools)
+
+#### Permission Management
+- `create_character_permission`: Create a permission for a character (requires manager or super admin)
+- `update_character_permission`: Update a character's permission level (requires manager or super admin)
+- `revoke_character_permission`: Revoke a character's permission (requires manager or super admin)
+- `list_all_permissions`: List all permissions (requires manager or super admin)
+- `get_permission_stats`: Get permission statistics (requires manager or super admin)
+
+#### Super Admin Operations
+- `create_super_admin`: Create a super admin permission (requires super admin)
+- `cleanup_expired_permissions`: Clean up expired permissions (requires super admin)
 
 ## Database
 

@@ -1,0 +1,222 @@
+/* Game Server Dashboard Styles */
+
+/* Layout */
+.sidebar {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.main-content {
+  min-height: 100vh;
+}
+
+/* Icon sizes */
+.icon-large {
+  font-size: 2rem;
+}
+
+.icon-medium {
+  font-size: 1.5rem;
+}
+
+/* Card hover effects */
+.card:hover,
+.card-hover:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.character-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.character-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.scene-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.scene-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.item-card {
+  transition: all 0.3s ease;
+}
+
+.item-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Status badges */
+.status-badge {
+  font-size: 0.8em;
+}
+
+.status-online {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-offline {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Log entries */
+.log-entry {
+  border-left: 3px solid #dee2e6;
+  padding-left: 1rem;
+  margin-bottom: 1rem;
+}
+
+.log-entry.success {
+  border-left-color: #28a745;
+}
+
+.log-entry.error {
+  border-left-color: #dc3545;
+}
+
+.log-entry.info {
+  border-left-color: #17a2b8;
+}
+
+.log-entry.warning {
+  border-left-color: #ffc107;
+}
+
+/* Trade offers */
+.trade-offer-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.trade-offer-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.trade-offer-card.pending {
+  border-color: #ffc107;
+  background-color: #fff3cd;
+}
+
+.trade-offer-card.accepted {
+  border-color: #28a745;
+  background-color: #d4edda;
+}
+
+.trade-offer-card.rejected {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+/* Permission badges */
+.permission-badge {
+  font-size: 0.75em;
+  padding: 0.25em 0.5em;
+}
+
+/* Citizenship applications */
+.citizenship-application-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.citizenship-application-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.citizenship-application-card.pending {
+  border-color: #ffc107;
+  background-color: #fff3cd;
+}
+
+.citizenship-application-card.approved {
+  border-color: #28a745;
+  background-color: #d4edda;
+}
+
+.citizenship-application-card.rejected {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .icon-large {
+    font-size: 1.5rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+/* Custom button styles */
+.btn-action {
+  margin: 0.25rem;
+  min-width: 80px;
+}
+
+/* Table improvements */
+.table-responsive {
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+/* Alert improvements */
+.alert {
+  border-radius: 0.5rem;
+  border: none;
+}
+
+/* Form improvements */
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Navigation improvements */
+.navbar-brand {
+  font-weight: 600;
+}
+
+/* Content sections */
+.content-section {
+  display: none;
+}
+
+.content-section.active {
+  display: block;
+}
+
+/* Footer */
+.footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 0;
+  margin-top: 2rem;
+}

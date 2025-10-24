@@ -12,49 +12,49 @@ document.addEventListener('DOMContentLoaded', function () {
 // Navigation functions
 function showDashboard() {
   hideAllSections();
-  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('dashboard').classList.add('active');
   updateActiveNav('dashboard');
   loadStats();
 }
 
 function showCharacters() {
   hideAllSections();
-  document.getElementById('characters').style.display = 'block';
+  document.getElementById('characters').classList.add('active');
   updateActiveNav('characters');
   loadCharacters();
 }
 
 function showScenes() {
   hideAllSections();
-  document.getElementById('scenes').style.display = 'block';
+  document.getElementById('scenes').classList.add('active');
   updateActiveNav('scenes');
   loadScenes();
 }
 
 function showItems() {
   hideAllSections();
-  document.getElementById('items').style.display = 'block';
+  document.getElementById('items').classList.add('active');
   updateActiveNav('items');
   loadItems();
 }
 
 function showLogs() {
   hideAllSections();
-  document.getElementById('logs').style.display = 'block';
+  document.getElementById('logs').classList.add('active');
   updateActiveNav('logs');
   loadLogs();
 }
 
 function showMCPConfig() {
   hideAllSections();
-  document.getElementById('mcp-config').style.display = 'block';
+  document.getElementById('mcp-config').classList.add('active');
   updateActiveNav('mcp-config');
   loadMCPConfig();
 }
 
 function hideAllSections() {
   const sections = document.querySelectorAll('.content-section');
-  sections.forEach(section => section.style.display = 'none');
+  sections.forEach(section => section.classList.remove('active'));
 }
 
 function updateActiveNav(activeSection) {

@@ -20,6 +20,7 @@ import { MemoryTools } from './tools/memory-tools.js';
 import { TradeTools } from './tools/trade-tools.js';
 import { PermissionTools } from './tools/permission-tools.js';
 import { CitizenshipTools } from './tools/citizenship-tools.js';
+import { SuperAdminServer } from './super-admin-server.js';
 import { CharacterService } from './services/CharacterService.js';
 import { SceneService } from './services/SceneService.js';
 import { ItemService } from './services/ItemService.js';
@@ -27,6 +28,8 @@ import { MemoryService } from './services/MemoryService.js';
 import { LoggingService } from './services/LoggingService.js';
 import { PermissionService } from './services/PermissionService.js';
 import { CitizenshipApplicationService } from './services/CitizenshipApplicationService.js';
+import { ToolRouter } from './utils/ToolRouter.js';
+import { ApiResponseHandler } from './utils/ApiResponseHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,6 +44,7 @@ class GameServer {
   private tradeTools: TradeTools;
   private permissionTools: PermissionTools;
   private citizenshipTools: CitizenshipTools;
+  private superAdminServer: SuperAdminServer;
   private characterService: CharacterService;
   private sceneService: SceneService;
   private itemService: ItemService;
@@ -50,6 +54,7 @@ class GameServer {
   private citizenshipService: CitizenshipApplicationService;
   private connectedClients: Set<any> = new Set();
   private permissionConnections: Map<string, string> = new Map(); // connectionId -> secretKey
+  private toolRouter: ToolRouter;
 
   constructor() {
     // Initialize MCP Server
@@ -76,6 +81,7 @@ class GameServer {
     this.tradeTools = new TradeTools();
     this.permissionTools = new PermissionTools();
     this.citizenshipTools = new CitizenshipTools();
+    this.superAdminServer = new SuperAdminServer();
     this.characterService = new CharacterService();
     this.sceneService = new SceneService();
     this.itemService = new ItemService();
@@ -84,7 +90,23 @@ class GameServer {
     this.permissionService = new PermissionService();
     this.citizenshipService = new CitizenshipApplicationService();
 
+    // Initialize Tool Router
+    this.toolRouter = new ToolRouter();
+    this.setupToolRouter();
+
     this.setupMCPHandlers();
+  }
+
+  private setupToolRouter() {
+    // Register all tool handlers
+    this.toolRouter.registerHandler(this.characterTools);
+    this.toolRouter.registerHandler(this.sceneTools);
+    this.toolRouter.registerHandler(this.actionTools);
+    this.toolRouter.registerHandler(this.memoryTools);
+    this.toolRouter.registerHandler(this.tradeTools);
+    this.toolRouter.registerHandler(this.permissionTools);
+    this.toolRouter.registerHandler(this.citizenshipTools);
+    this.toolRouter.registerHandler(this.superAdminServer);
   }
 
   private setupWebApp() {
@@ -112,64 +134,62 @@ class GameServer {
   private setupWebRoutes() {
     // Characters
     this.webApp.get('/api/characters', (req, res) => {
-      try {
-        const characters = this.characterService.getAllCharacters();
-        res.json({ success: true, characters });
-      } catch (error) {
-        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
-      }
+      ApiResponseHandler.handleRequestWithKey(
+        res,
+        () => Promise.resolve(this.characterService.getAllCharacters()),
+        'characters'
+      );
     });
 
     this.webApp.get('/api/characters/:id', (req, res) => {
-      try {
-        const character = this.characterService.getCharacterById(parseInt(req.params.id));
-        if (!character) {
-          return res.status(404).json({ success: false, error: 'Character not found' });
+      ApiResponseHandler.handleRequest(
+        res,
+        () => {
+          const character = this.characterService.getCharacterById(parseInt(req.params.id));
+          if (!character) {
+            throw new Error('Character not found');
+          }
+          return Promise.resolve(character);
         }
-        res.json({ success: true, character });
-      } catch (error) {
-        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
-      }
+      );
     });
 
     this.webApp.get('/api/characters/:id/memories', (req, res) => {
-      try {
-        const memories = this.memoryService.getAllMemories(parseInt(req.params.id));
-        res.json({ success: true, memories });
-      } catch (error) {
-        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
-      }
+      ApiResponseHandler.handleRequestWithKey(
+        res,
+        () => Promise.resolve(this.memoryService.getAllMemories(parseInt(req.params.id))),
+        'memories'
+      );
     });
 
     this.webApp.get('/api/characters/:id/items', (req, res) => {
-      try {
-        const items = this.itemService.getItemsByCharacter(parseInt(req.params.id));
-        res.json({ success: true, items });
-      } catch (error) {
-        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
-      }
+      ApiResponseHandler.handleRequestWithKey(
+        res,
+        () => Promise.resolve(this.itemService.getItemsByCharacter(parseInt(req.params.id))),
+        'items'
+      );
     });
 
     // Scenes
     this.webApp.get('/api/scenes', (req, res) => {
-      try {
-        const scenes = this.sceneService.getAllScenes();
-        res.json({ success: true, scenes });
-      } catch (error) {
-        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
-      }
+      ApiResponseHandler.handleRequestWithKey(
+        res,
+        () => Promise.resolve(this.sceneService.getAllScenes()),
+        'scenes'
+      );
     });
 
     this.webApp.get('/api/scenes/:id', (req, res) => {
-      try {
-        const scene = this.sceneService.getSceneDetails(parseInt(req.params.id));
-        if (!scene) {
-          return res.status(404).json({ success: false, error: 'Scene not found' });
+      ApiResponseHandler.handleRequest(
+        res,
+        () => {
+          const scene = this.sceneService.getSceneDetails(parseInt(req.params.id));
+          if (!scene) {
+            throw new Error('Scene not found');
+          }
+          return Promise.resolve(scene);
         }
-        res.json({ success: true, scene });
-      } catch (error) {
-        res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
-      }
+      );
     });
 
     // Items
@@ -466,21 +486,15 @@ class GameServer {
         res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
+
+    // 集成超级管理员路由
+    this.webApp.use('/admin', this.superAdminServer.getWebApp());
   }
 
   private setupMCPHandlers() {
     // List tools handler
     this.mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
-      const allTools = [
-        ...this.characterTools.getTools(),
-        ...this.sceneTools.getTools(),
-        ...this.actionTools.getTools(),
-        ...this.memoryTools.getTools(),
-        ...this.tradeTools.getTools(),
-        ...this.permissionTools.getTools(),
-        ...this.citizenshipTools.getTools(),
-      ];
-
+      const allTools = this.toolRouter.getAllTools();
       return {
         tools: allTools,
       };
@@ -491,34 +505,7 @@ class GameServer {
       const { name, arguments: args } = request.params;
 
       try {
-        let result;
-
-        // Route to appropriate tool handler
-        if (this.characterTools.getTools().some(tool => tool.name === name)) {
-          result = await this.characterTools.handleToolCall(name, args);
-        } else if (this.sceneTools.getTools().some(tool => tool.name === name)) {
-          result = await this.sceneTools.handleToolCall(name, args);
-        } else if (this.actionTools.getTools().some(tool => tool.name === name)) {
-          result = await this.actionTools.handleToolCall(name, args);
-        } else if (this.memoryTools.getTools().some(tool => tool.name === name)) {
-          result = await this.memoryTools.handleToolCall(name, args);
-        } else if (this.tradeTools.getTools().some(tool => tool.name === name)) {
-          result = await this.tradeTools.handleToolCall(name, args);
-        } else if (this.permissionTools.getTools().some(tool => tool.name === name)) {
-          result = await this.permissionTools.handleToolCall(name, args);
-        } else if (this.citizenshipTools.getTools().some(tool => tool.name === name)) {
-          result = await this.citizenshipTools.handleToolCall(name, args);
-        } else {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Unknown tool: ${name}`,
-              },
-            ],
-            isError: true,
-          };
-        }
+        const result = await this.toolRouter.routeToolCall(name, args);
 
         // Format the response
         if (result.success) {
@@ -604,13 +591,109 @@ class GameServer {
           permissionStats: permissionStats,
           applicationStats: applicationStats,
           sseUrl: 'http://localhost:3000/mcp',
-          instructions: 'Connect via SSE for real-time multiplayer. Use X-Secret-Key header to authenticate with your permission level, or X-Character-ID for guest access.'
+          adminSseUrl: 'http://localhost:3000/admin/mcp',
+          instructions: 'Connect via SSE for real-time multiplayer. Use X-Secret-Key header to authenticate with your permission level, or X-Character-ID for guest access. Super admin tools available at /admin/mcp endpoint.'
         });
+      });
+
+      // 添加超级管理员MCP路由
+      this.webApp.get('/admin/mcp', (req, res) => {
+        const secretKey = req.headers['x-secret-key'] as string;
+
+        console.log('🔌 New Super Admin MCP client connected via SSE');
+        console.log('📍 Client IP:', req.ip);
+        console.log('📍 User-Agent:', req.headers['user-agent']);
+        console.log('🔑 Secret Key:', secretKey ? 'Provided' : 'Not provided');
+
+        // Set SSE headers
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Headers', 'Cache-Control, X-Secret-Key');
+
+        // Add client to connected set
+        this.connectedClients.add(res);
+
+        // Handle permission validation
+        let permissionInfo = null;
+        let connectionStatus = 'guest';
+
+        if (secretKey) {
+          permissionInfo = this.permissionService.getPermissionInfo(secretKey);
+          if (permissionInfo) {
+            connectionStatus = 'authenticated';
+            console.log('✅ Valid secret key provided, permission level:', permissionInfo.permission_level);
+          } else {
+            console.log('❌ Invalid secret key provided');
+          }
+        } else {
+          console.log('ℹ️ No secret key provided, connecting as guest');
+        }
+
+        // Store permission connection mapping
+        const connectionId = `${req.ip}-${Date.now()}`;
+        if (secretKey && permissionInfo) {
+          this.permissionConnections.set(connectionId, secretKey);
+        }
+
+        console.log('📊 Total connected clients:', this.connectedClients.size);
+
+        // Send initial connection message
+        const connectionResponse = {
+          type: 'connection',
+          status: connectionStatus,
+          permission_info: permissionInfo,
+          needs_authentication: !secretKey || !permissionInfo,
+          message: permissionInfo ?
+            `Connected with ${permissionInfo.permission_level} permissions` :
+            secretKey ? 'Invalid secret key. Please check your credentials.' : 'Connected as guest. Super Admin secret key required for full access.'
+        };
+        res.write(`data: ${JSON.stringify(connectionResponse)}\n\n`);
+
+        // Handle client disconnect
+        req.on('close', () => {
+          console.log('🔌 Super Admin MCP client disconnected');
+          this.connectedClients.delete(res);
+          this.permissionConnections.delete(connectionId);
+        });
+
+        req.on('error', (error) => {
+          console.error('❌ SSE connection error:', error);
+          this.connectedClients.delete(res);
+          this.permissionConnections.delete(connectionId);
+        });
+      });
+
+      // 添加超级管理员MCP POST路由
+      this.webApp.post('/admin/mcp', express.json(), async (req, res) => {
+        try {
+          console.log('📥 Received Super Admin MCP request:', JSON.stringify(req.body, null, 2));
+
+          const response = await this.superAdminServer.getSSEHandler().handleMCPRequest(req.body);
+          console.log('📤 Sending Super Admin MCP response:', JSON.stringify(response, null, 2));
+
+          res.json(response);
+        } catch (error) {
+          console.error('❌ Error handling Super Admin MCP request:', error);
+          const errorResponse = {
+            jsonrpc: '2.0',
+            id: req.body.id || null,
+            error: {
+              code: -32603,
+              message: 'Internal error',
+              data: error instanceof Error ? error.message : 'Unknown error'
+            }
+          };
+          res.json(errorResponse);
+        }
       });
 
       console.log('✅ Server started successfully!');
       console.log('   - Web interface: http://localhost:3000');
       console.log('   - MCP SSE: http://localhost:3000/mcp');
+      console.log('   - Super Admin MCP SSE: http://localhost:3000/admin/mcp');
+      console.log('   - Super Admin Web interface: http://localhost:3000/admin');
       console.log('   - Connected clients: 0');
     }
   }
@@ -750,15 +833,7 @@ class GameServer {
         return response;
       } else if (method === 'tools/list') {
         console.log('📋 Listing tools...');
-        const allTools = [
-          ...this.characterTools.getTools(),
-          ...this.sceneTools.getTools(),
-          ...this.actionTools.getTools(),
-          ...this.memoryTools.getTools(),
-          ...this.tradeTools.getTools(),
-          ...this.permissionTools.getTools(),
-          ...this.citizenshipTools.getTools(),
-        ];
+        const allTools = this.toolRouter.getAllTools();
 
         console.log(`✅ Found ${allTools.length} tools`);
         const response = {
@@ -771,28 +846,15 @@ class GameServer {
       } else if (method === 'tools/call') {
         const { name, arguments: args } = params;
 
-        let result;
-        if (this.characterTools.getTools().some(tool => tool.name === name)) {
-          result = await this.characterTools.handleToolCall(name, args);
-        } else if (this.sceneTools.getTools().some(tool => tool.name === name)) {
-          result = await this.sceneTools.handleToolCall(name, args);
-        } else if (this.actionTools.getTools().some(tool => tool.name === name)) {
-          result = await this.actionTools.handleToolCall(name, args);
-        } else if (this.memoryTools.getTools().some(tool => tool.name === name)) {
-          result = await this.memoryTools.handleToolCall(name, args);
-        } else if (this.tradeTools.getTools().some(tool => tool.name === name)) {
-          result = await this.tradeTools.handleToolCall(name, args);
-        } else if (this.permissionTools.getTools().some(tool => tool.name === name)) {
-          result = await this.permissionTools.handleToolCall(name, args);
-        } else if (this.citizenshipTools.getTools().some(tool => tool.name === name)) {
-          result = await this.citizenshipTools.handleToolCall(name, args);
-        } else {
+        const result = await this.toolRouter.routeToolCall(name, args);
+
+        if (!result.success) {
           return {
             jsonrpc: '2.0',
             id,
             error: {
               code: -32601,
-              message: `Unknown tool: ${name}`
+              message: result.error
             }
           };
         }
