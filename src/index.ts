@@ -116,22 +116,230 @@ class GameServer {
   private setupWebApp() {
     const PORT = process.env.PORT || 3000;
 
+    // Configure Pug view engine
+    this.webApp.set('view engine', 'pug');
+    this.webApp.set('views', join(__dirname, '..', 'src', 'views'));
+
     // Middleware
     this.webApp.use(cors());
     this.webApp.use(express.json());
     this.webApp.use(express.static(join(__dirname, '..', 'src', 'public')));
 
-    // API Routes
+    // API Routes (keep for AJAX calls)
     this.setupWebRoutes();
 
-    // Serve the main HTML file
-    this.webApp.get('/', (req, res) => {
-      res.sendFile(join(__dirname, '..', 'src', 'public', 'index.html'));
-    });
+    // Page Routes (Server-Side Rendering)
+    this.setupPageRoutes();
 
     // Start the server
     this.webApp.listen(3000, () => {
       console.log('Web server running on http://localhost:3000');
+    });
+  }
+
+  private setupPageRoutes() {
+    // Dashboard
+    this.webApp.get('/', (req, res) => {
+      try {
+        const stats = this.loggingService.getStats();
+        const recentLogs = this.loggingService.getLogsWithCharacterInfo(10);
+        res.render('dashboard', {
+          page: 'dashboard',
+          stats,
+          recentLogs
+        });
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        res.status(500).send('Error loading dashboard');
+      }
+    });
+
+    // Characters
+    this.webApp.get('/characters', (req, res) => {
+      try {
+        const characters = this.characterService.getAllCharacters();
+
+        // Enrich characters with memories and items
+        const enrichedCharacters = characters.map(char => {
+          const memories = this.memoryService.getAllMemories(char.id);
+          const items = this.itemService.getItemsByCharacter(char.id);
+          return { ...char, ...memories, items };
+        });
+
+        res.render('characters', {
+          page: 'characters',
+          characters: enrichedCharacters
+        });
+      } catch (error) {
+        console.error('Error loading characters:', error);
+        res.status(500).send('Error loading characters');
+      }
+    });
+
+    // Scenes
+    this.webApp.get('/scenes', (req, res) => {
+      try {
+        const scenes = this.sceneService.getAllScenes();
+
+        // Enrich scenes with details
+        const enrichedScenes = scenes.map(scene => {
+          const details = this.sceneService.getSceneDetails(scene.id);
+          return details || scene;
+        });
+
+        res.render('scenes', {
+          page: 'scenes',
+          scenes: enrichedScenes
+        });
+      } catch (error) {
+        console.error('Error loading scenes:', error);
+        res.status(500).send('Error loading scenes');
+      }
+    });
+
+    // Items
+    this.webApp.get('/items', (req, res) => {
+      try {
+        const items = this.itemService.getAllItems();
+        res.render('items', {
+          page: 'items',
+          items
+        });
+      } catch (error) {
+        console.error('Error loading items:', error);
+        res.status(500).send('Error loading items');
+      }
+    });
+
+    // Logs
+    this.webApp.get('/logs', (req, res) => {
+      try {
+        const { date, character } = req.query;
+        let logs;
+
+        if (date) {
+          logs = this.loggingService.getLogsByDate(date as string);
+        } else {
+          logs = this.loggingService.getLogsWithCharacterInfo(1000);
+        }
+
+        // Filter by character if specified
+        if (character) {
+          logs = logs.filter((log: any) => log.character_name === character);
+        }
+
+        // Get unique character names for filter dropdown
+        const characters = [...new Set(logs.map((log: any) => log.character_name).filter(Boolean))];
+
+        res.render('logs', {
+          page: 'logs',
+          logs,
+          characters,
+          selectedDate: date || '',
+          selectedCharacter: character || ''
+        });
+      } catch (error) {
+        console.error('Error loading logs:', error);
+        res.status(500).send('Error loading logs');
+      }
+    });
+
+    // MCP Config
+    this.webApp.get('/mcp-config', (req, res) => {
+      try {
+        // Get all tools
+        const gameCoreToolsList = this.gameCoreTools.getTools();
+        const gameInteractionToolsList = this.gameInteractionTools.getTools();
+        const gameManagementToolsList = this.gameManagementTools.getTools();
+
+        const allTools = [
+          ...gameCoreToolsList,
+          ...gameInteractionToolsList,
+          ...gameManagementToolsList
+        ];
+
+        // Category mapping
+        const categoryMap: Record<string, string> = {
+          'create_character': '角色管理',
+          'get_character': '角色管理',
+          'get_character_by_name': '角色管理',
+          'list_characters': '角色管理',
+          'update_character': '角色管理',
+          'delete_character': '角色管理',
+          'create_scene': '场景管理',
+          'get_scene': '场景管理',
+          'get_scene_by_name': '场景管理',
+          'get_scene_details': '场景管理',
+          'list_scenes': '场景管理',
+          'connect_scenes': '场景管理',
+          'get_scene_connections': '场景管理',
+          'move_character': '行动系统',
+          'speak_public': '行动系统',
+          'speak_private': '行动系统',
+          'pick_item': '行动系统',
+          'drop_item': '行动系统',
+          'use_item': '行动系统',
+          'get_character_items': '行动系统',
+          'create_item': '物品管理',
+          'get_item': '物品管理',
+          'list_items': '物品管理',
+          'update_item': '物品管理',
+          'delete_item': '物品管理',
+          'add_short_memory': '记忆管理',
+          'add_long_memory': '记忆管理',
+          'get_short_memories': '记忆管理',
+          'get_long_memories': '记忆管理',
+          'get_all_memories': '记忆管理',
+          'update_short_memory': '记忆管理',
+          'update_long_memory': '记忆管理',
+          'delete_short_memory': '记忆管理',
+          'delete_long_memory': '记忆管理',
+          'delete_all_memories': '记忆管理',
+          'create_trade_offer': '交易系统',
+          'respond_to_trade_offer': '交易系统',
+          'cancel_trade_offer': '交易系统',
+          'get_trade_offers': '交易系统',
+          'get_pending_trade_offers': '交易系统',
+          'send_direct_message': '消息系统',
+          'get_direct_messages': '消息系统',
+          'mark_message_as_read': '消息系统',
+          'mark_all_messages_as_read': '消息系统',
+          'validate_identity': '身份管理',
+          'apply_for_citizenship': '身份管理',
+          'review_citizenship_application': '身份管理',
+          'generate_visitor_id': '身份管理',
+          'list_citizenship_applications': '身份管理',
+          'mcp_list_resources': 'MCP资源',
+          'mcp_read_resource': 'MCP资源',
+          'mcp_list_prompts': 'MCP资源',
+          'mcp_get_prompt': 'MCP资源'
+        };
+
+        // Group tools by category
+        const toolsByCategory: Record<string, any[]> = {};
+        allTools.forEach(tool => {
+          const category = categoryMap[tool.name] || '其他';
+          if (!toolsByCategory[category]) {
+            toolsByCategory[category] = [];
+          }
+          toolsByCategory[category].push(tool);
+        });
+
+        const categories = Object.keys(toolsByCategory).map(name => ({
+          name,
+          tools: toolsByCategory[name]
+        }));
+
+        res.render('mcp-config', {
+          page: 'mcp-config',
+          categories,
+          totalTools: allTools.length,
+          serverStartTime: new Date().toLocaleString('zh-CN')
+        });
+      } catch (error) {
+        console.error('Error loading MCP config:', error);
+        res.status(500).send('Error loading MCP config');
+      }
     });
   }
 

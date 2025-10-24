@@ -1,0 +1,96 @@
+extends layout
+
+block content
+  h2.mb-4 MCP 工具配置
+  
+  .row
+    .col-md-6
+      h4 SSE 配置 (推荐)
+      .card
+        .card-header.d-flex.justify-content-between.align-items-center
+          span mcp.json
+          button.btn.btn-sm.btn-outline-primary(onclick="copyToClipboard('sseConfig')")
+            i.bi.bi-clipboard
+            |  复制
+        .card-body
+          pre#sseConfig.mb-0
+            code.
+              {
+                "mcpServers": {
+                  "matrix": {
+                    "url": "http://localhost:3000/mcp"
+                  }
+                }
+              }
+    
+    .col-md-6
+      h4 启动说明
+      .card
+        .card-body
+          h6 1. 启动游戏服务器
+          pre.bg-light.p-2.rounded
+            code npm start
+          
+          h6.mt-3 2. 复制上面的配置到 mcp.json
+          
+          h6.mt-3 3. 重启 Cursor 编辑器
+          
+          .alert.alert-success.mt-3
+            i.bi.bi-check-circle
+            |  
+            strong 优势：
+            |  SSE 连接支持真正的多人联机，所有客户端共享同一个游戏世界！
+          
+          .alert.alert-warning.mt-3
+            i.bi.bi-exclamation-triangle
+            |  
+            strong 注意：
+            |  确保游戏服务器正在运行，否则 MCP 工具将无法使用。
+  
+  .row.mt-4
+    .col-12
+      h4 可用工具列表
+      .card
+        .card-body
+          .row
+            each category in categories
+              .col-md-6.col-lg-4.mb-3
+                .card
+                  .card-header
+                    h6.mb-0= category.name
+                  .card-body
+                    each tool in category.tools
+                      .d-flex.justify-content-between.align-items-center.mb-2
+                        div
+                          code.text-primary= tool.name
+                          br
+                          small.text-muted= tool.description
+  
+  .row.mt-4
+    .col-12
+      h4 服务器信息
+      .card
+        .card-body
+          .row
+            .col-md-6
+              p
+                strong 服务器名称：
+                |  matrix-game
+              p
+                strong 版本：
+                |  1.0.0
+              p
+                strong 协议：
+                |  sse
+            .col-md-6
+              p
+                strong 工具总数：
+                |  #{totalTools}
+              p
+                strong 状态：
+                |  
+                span.badge.bg-success 运行中
+              p
+                strong 启动时间：
+                |  #{serverStartTime}
+

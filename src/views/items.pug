@@ -1,0 +1,33 @@
+extends layout
+
+block content
+  h2.mb-4 物品列表
+  
+  .table-responsive
+    table.table.table-striped
+      thead
+        tr
+          th ID
+          th 名称
+          th 描述
+          th 位置
+          th 创建时间
+      tbody
+        if items.length === 0
+          tr
+            td.text-center.text-muted(colspan="5") 暂无物品
+        else
+          each item in items
+            tr
+              td= item.id
+              td= item.name
+              td= item.description
+              td
+                if item.scene_id
+                  | 场景 #{item.scene_id}
+                else if item.character_id
+                  | 角色 #{item.character_id}
+                else
+                  | 未知
+              td= new Date(item.created_at).toLocaleString('zh-CN')
+

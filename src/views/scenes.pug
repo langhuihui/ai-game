@@ -1,0 +1,51 @@
+extends layout
+
+block content
+  h2.mb-4 场景列表
+  
+  if scenes.length === 0
+    p.text-muted 暂无场景
+  else
+    .row
+      each scene in scenes
+        .col-md-6.col-lg-4.mb-3
+          .card.scene-card.card-hover
+            .card-body
+              h5.card-title= scene.name
+              p.card-text.text-muted= scene.description
+              small.text-muted 创建时间: #{new Date(scene.created_at).toLocaleString('zh-CN')}
+              hr
+              // Scene Details Section
+              details
+                summary.btn.btn-sm.btn-outline-primary.w-100 查看详情
+                .mt-3
+                  if scene.characters && scene.characters.length > 0
+                    h6 在场角色 (#{scene.characters.length})
+                    div
+                      each char in scene.characters
+                        span.badge.bg-primary.me-1= char.name
+                  else
+                    p.text-muted.small 无角色在场
+                  
+                  if scene.items && scene.items.length > 0
+                    h6.mt-3 场景物品 (#{scene.items.length})
+                    div
+                      each item in scene.items
+                        .border-bottom.pb-2.mb-2
+                          strong= item.name
+                          p.mb-0.text-muted.small= item.description
+                  else
+                    p.text-muted.small 无物品
+                  
+                  if scene.connections && scene.connections.length > 0
+                    h6.mt-3 连接出口 (#{scene.connections.length})
+                    div
+                      each conn in scene.connections
+                        .border-bottom.pb-2.mb-2
+                          .d-flex.justify-content-between
+                            strong= conn.to_scene_name
+                            span.badge.bg-secondary= conn.connection_type
+                          p.mb-0.text-muted.small= conn.description
+                  else
+                    p.text-muted.small 无连接
+

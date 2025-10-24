@@ -110,4 +110,27 @@ export class LoggingService {
     const result = stmt.run();
     return result.changes > 0;
   }
+
+  getStats(): { totalCharacters: number; totalScenes: number; totalItems: number; recentActivity: number; } {
+    const charactersStmt = this.db.prepare('SELECT COUNT(*) as count FROM characters');
+    const scenesStmt = this.db.prepare('SELECT COUNT(*) as count FROM scenes');
+    const itemsStmt = this.db.prepare('SELECT COUNT(*) as count FROM items');
+    const recentActivityStmt = this.db.prepare(`
+      SELECT COUNT(*) as count 
+      FROM action_logs 
+      WHERE timestamp > datetime('now', '-24 hours')
+    `);
+
+    const charactersCount = (charactersStmt.get() as any).count;
+    const scenesCount = (scenesStmt.get() as any).count;
+    const itemsCount = (itemsStmt.get() as any).count;
+    const recentActivityCount = (recentActivityStmt.get() as any).count;
+
+    return {
+      totalCharacters: charactersCount,
+      totalScenes: scenesCount,
+      totalItems: itemsCount,
+      recentActivity: recentActivityCount
+    };
+  }
 }

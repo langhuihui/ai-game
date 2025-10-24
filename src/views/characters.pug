@@ -1,0 +1,58 @@
+extends layout
+
+block content
+  h2.mb-4 角色列表
+  
+  if characters.length === 0
+    p.text-muted 暂无角色
+  else
+    .row
+      each character in characters
+        .col-md-6.col-lg-4.mb-3
+          .card.character-card.card-hover
+            .card-body
+              h5.card-title= character.name
+              p.card-text.text-muted= character.description
+              .d-flex.justify-content-between.mb-2
+                span.badge.bg-primary.status-badge
+                  i.bi.bi-heart
+                  |  #{character.health}
+                span.badge.bg-info.status-badge
+                  i.bi.bi-brain
+                  |  #{character.mental_state}
+              small.text-muted 场景ID: #{character.current_scene_id || '无'}
+              hr
+              // Character Details Section
+              details
+                summary.btn.btn-sm.btn-outline-primary.w-100 查看详情
+                .mt-3
+                  p
+                    strong 性格：
+                    |  #{character.personality}
+                  
+                  if character.items && character.items.length > 0
+                    h6.mt-3 物品 (#{character.items.length})
+                    div
+                      each item in character.items
+                        span.badge.bg-secondary.me-1= item.name
+                  else
+                    p.text-muted.small 无物品
+                  
+                  if character.short_memories && character.short_memories.length > 0
+                    h6.mt-3 短时记忆 (#{character.short_memories.length})
+                    .memories-container(style="max-height: 150px; overflow-y: auto;")
+                      each memory in character.short_memories
+                        .border-bottom.pb-2.mb-2
+                          small.text-muted= new Date(memory.timestamp).toLocaleString('zh-CN')
+                          p.mb-0.small= memory.content
+                  
+                  if character.long_memories && character.long_memories.length > 0
+                    h6.mt-3 长时记忆 (#{character.long_memories.length})
+                    .memories-container(style="max-height: 150px; overflow-y: auto;")
+                      each memory in character.long_memories
+                        .border-bottom.pb-2.mb-2
+                          .d-flex.justify-content-between
+                            small.text-muted= new Date(memory.timestamp).toLocaleString('zh-CN')
+                            span.badge.bg-warning 重要性: #{memory.importance}
+                          p.mb-0.small= memory.content
+

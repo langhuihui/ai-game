@@ -1,0 +1,51 @@
+extends layout
+
+block content
+  h2.mb-4 仪表板
+  
+  // Stats Cards
+  .row.mb-4
+    .col-md-3
+      .card.text-center
+        .card-body
+          i.bi.bi-people.text-primary.icon-large
+          h5.card-title.mt-2 角色总数
+          h3.text-primary= stats.totalCharacters
+    .col-md-3
+      .card.text-center
+        .card-body
+          i.bi.bi-geo-alt.text-success.icon-large
+          h5.card-title.mt-2 场景总数
+          h3.text-success= stats.totalScenes
+    .col-md-3
+      .card.text-center
+        .card-body
+          i.bi.bi-box.text-warning.icon-large
+          h5.card-title.mt-2 物品总数
+          h3.text-warning= stats.totalItems
+    .col-md-3
+      .card.text-center
+        .card-body
+          i.bi.bi-activity.text-info.icon-large
+          h5.card-title.mt-2 最近活动
+          h3.text-info= stats.recentActivity
+  
+  // Recent Activity
+  .row
+    .col-12
+      .card
+        .card-header
+          h5 最近活动
+        .card-body
+          if recentLogs.length === 0
+            p.text-muted 暂无最近活动
+          else
+            each log in recentLogs
+              .log-entry(class=log.result ? 'success' : 'error')
+                .d-flex.justify-content-between
+                  div
+                    strong= log.character_name || '系统'
+                    | &nbsp;- #{log.action_type}
+                  small.text-muted= new Date(log.timestamp).toLocaleString('zh-CN')
+                .text-muted.small= log.action_data
+
