@@ -1,33 +1,35 @@
 extends layout
 
 block content
-  h2.mb-4 仪表板
+  h2.mb-4
+    i.bi.bi-grid-3x3-gap.me-2
+    | SYSTEM OVERVIEW / 系统概览
   
   // Stats Cards
   .row.mb-4
     .col-md-3
       .card.text-center
         .card-body
-          i.bi.bi-people.text-primary.icon-large
-          h5.card-title.mt-2 角色总数
+          i.bi.bi-person-badge.text-primary.icon-large
+          h5.card-title.mt-2 ENTITIES / 载体数量
           h3.text-primary= stats.totalCharacters
     .col-md-3
       .card.text-center
         .card-body
-          i.bi.bi-geo-alt.text-success.icon-large
-          h5.card-title.mt-2 场景总数
+          i.bi.bi-diagram-3.text-success.icon-large
+          h5.card-title.mt-2 ZONES / 空间区域
           h3.text-success= stats.totalScenes
     .col-md-3
       .card.text-center
         .card-body
-          i.bi.bi-box.text-warning.icon-large
-          h5.card-title.mt-2 物品总数
+          i.bi.bi-cpu.text-warning.icon-large
+          h5.card-title.mt-2 OBJECTS / 物品对象
           h3.text-warning= stats.totalItems
     .col-md-3
       .card.text-center
         .card-body
-          i.bi.bi-activity.text-info.icon-large
-          h5.card-title.mt-2 最近活动
+          i.bi.bi-lightning.text-info.icon-large
+          h5.card-title.mt-2 ACTIVITY / 24H活动
           h3.text-info= stats.recentActivity
   
   // Recent Activity
@@ -35,17 +37,19 @@ block content
     .col-12
       .card
         .card-header
-          h5 最近活动
+          h5
+            i.bi.bi-terminal.me-2
+            | SYSTEM LOG / 系统日志流
         .card-body
           if recentLogs.length === 0
-            p.text-muted 暂无最近活动
+            p.text-muted [NO DATA] 暂无活动记录
           else
             each log in recentLogs
               .log-entry(class=log.result ? 'success' : 'error')
                 .d-flex.justify-content-between
                   div
-                    strong= log.character_name || '系统'
-                    | &nbsp;- #{log.action_type}
+                    strong= `[${log.character_name || 'SYSTEM'}]`
+                    | &nbsp;#{log.action_type}
                   small.text-muted= new Date(log.timestamp).toLocaleString('zh-CN')
                 .text-muted.small= log.action_data
 

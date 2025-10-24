@@ -1,51 +1,63 @@
 extends layout
 
 block content
-  h2.mb-4 场景列表
+  h2.mb-4
+    i.bi.bi-diagram-3.me-2
+    | SPACE MATRIX / 空间矩阵
   
   if scenes.length === 0
-    p.text-muted 暂无场景
+    p.text-muted [NO DATA] 暂无空间记录
   else
     .row
       each scene in scenes
         .col-md-6.col-lg-4.mb-3
           .card.scene-card.card-hover
             .card-body
-              h5.card-title= scene.name
+              h5.card-title
+                i.bi.bi-geo-alt-fill.me-1
+                | #{scene.name}
               p.card-text.text-muted= scene.description
-              small.text-muted 创建时间: #{new Date(scene.created_at).toLocaleString('zh-CN')}
+              small.text-muted CREATED: #{new Date(scene.created_at).toLocaleString('zh-CN')}
               hr
               // Scene Details Section
               details
-                summary.btn.btn-sm.btn-outline-primary.w-100 查看详情
+                summary.btn.btn-sm.btn-outline-primary.w-100
+                  i.bi.bi-code-square.me-1
+                  | ACCESS DATA / 查看数据
                 .mt-3
                   if scene.characters && scene.characters.length > 0
-                    h6 在场角色 (#{scene.characters.length})
+                    h6
+                      i.bi.bi-person-badge.me-1
+                      | ENTITIES / 载体 (#{scene.characters.length})
                     div
                       each char in scene.characters
                         span.badge.bg-primary.me-1= char.name
                   else
-                    p.text-muted.small 无角色在场
+                    p.text-muted.small [EMPTY] 无载体存在
                   
                   if scene.items && scene.items.length > 0
-                    h6.mt-3 场景物品 (#{scene.items.length})
+                    h6.mt-3
+                      i.bi.bi-cpu.me-1
+                      | OBJECTS / 物品 (#{scene.items.length})
                     div
                       each item in scene.items
                         .border-bottom.pb-2.mb-2
-                          strong= item.name
+                          strong= `[${item.name}]`
                           p.mb-0.text-muted.small= item.description
                   else
-                    p.text-muted.small 无物品
+                    p.text-muted.small [EMPTY] 无物品数据
                   
                   if scene.connections && scene.connections.length > 0
-                    h6.mt-3 连接出口 (#{scene.connections.length})
+                    h6.mt-3
+                      i.bi.bi-arrows-move.me-1
+                      | CONNECTIONS / 空间连接 (#{scene.connections.length})
                     div
                       each conn in scene.connections
                         .border-bottom.pb-2.mb-2
                           .d-flex.justify-content-between
-                            strong= conn.to_scene_name
+                            strong= `→ ${conn.to_scene_name}`
                             span.badge.bg-secondary= conn.connection_type
                           p.mb-0.text-muted.small= conn.description
                   else
-                    p.text-muted.small 无连接
+                    p.text-muted.small [ISOLATED] 无空间连接
 

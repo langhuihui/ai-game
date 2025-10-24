@@ -1,7 +1,9 @@
 extends layout
 
 block content
-  h2.mb-4 行为日志
+  h2.mb-4
+    i.bi.bi-terminal.me-2
+    | SYSTEM LOGS / 系统日志
   
   .row.mb-3
     .col-md-4
@@ -18,20 +20,20 @@ block content
     .col-md-4
       a.btn.btn-primary(href="/logs")
         i.bi.bi-arrow-clockwise
-        |  重置筛选
+        |  RESET / 重置
   
   if logs.length === 0
-    p.text-muted 暂无日志
+    p.text-muted [NO DATA] 暂无日志记录
   else
     each log in logs
       .log-entry(class=log.result ? 'success' : 'error')
         .d-flex.justify-content-between.align-items-start
           .flex-grow-1
             .d-flex.align-items-center.mb-1
-              strong= log.character_name || '系统'
+              strong= `[${log.character_name || 'SYSTEM'}]`
               span.badge.bg-secondary.ms-2= log.action_type
             .text-muted.small.mb-1= log.action_data
             if log.result
-              .text-success.small 结果: #{log.result}
-          small.text-muted= new Date(log.timestamp).toLocaleString('zh-CN')
+              .text-success.small OUTPUT: #{log.result}
+          small.text-muted= `[${new Date(log.timestamp).toLocaleString('zh-CN')}]`
 

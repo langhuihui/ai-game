@@ -1,21 +1,23 @@
 extends layout
 
 block content
-  h2.mb-4 物品列表
+  h2.mb-4
+    i.bi.bi-cpu.me-2
+    | OBJECTS DATABASE / 物品数据库
   
   .table-responsive
     table.table.table-striped
       thead
         tr
-          th ID
-          th 名称
-          th 描述
-          th 位置
-          th 创建时间
+          th OBJ_ID
+          th NAME / 名称
+          th DESCRIPTION / 描述
+          th LOCATION / 位置
+          th CREATED / 创建时间
       tbody
         if items.length === 0
           tr
-            td.text-center.text-muted(colspan="5") 暂无物品
+            td.text-center.text-muted(colspan="5") [NO DATA] 暂无物品记录
         else
           each item in items
             tr
@@ -24,10 +26,10 @@ block content
               td= item.description
               td
                 if item.scene_id
-                  | 场景 #{item.scene_id}
+                  | ZONE_#{item.scene_id}
                 else if item.character_id
-                  | 角色 #{item.character_id}
+                  | ENTITY_#{item.character_id}
                 else
-                  | 未知
+                  | [NULL]
               td= new Date(item.created_at).toLocaleString('zh-CN')
 

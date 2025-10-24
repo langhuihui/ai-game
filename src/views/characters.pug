@@ -1,10 +1,12 @@
 extends layout
 
 block content
-  h2.mb-4 角色列表
+  h2.mb-4
+    i.bi.bi-person-badge.me-2
+    | ENTITIES DATABASE / 载体数据库
   
   if characters.length === 0
-    p.text-muted 暂无角色
+    p.text-muted [NO DATA] 暂无载体记录
   else
     .row
       each character in characters
@@ -20,39 +22,47 @@ block content
                 span.badge.bg-info.status-badge
                   i.bi.bi-brain
                   |  #{character.mental_state}
-              small.text-muted 场景ID: #{character.current_scene_id || '无'}
+              small.text-muted ZONE_ID: #{character.current_scene_id || 'NULL'}
               hr
               // Character Details Section
               details
-                summary.btn.btn-sm.btn-outline-primary.w-100 查看详情
+                summary.btn.btn-sm.btn-outline-primary.w-100
+                  i.bi.bi-code-square.me-1
+                  | ACCESS DATA / 查看数据
                 .mt-3
                   p
-                    strong 性格：
+                    strong PERSONALITY / 性格特征：
                     |  #{character.personality}
                   
                   if character.items && character.items.length > 0
-                    h6.mt-3 物品 (#{character.items.length})
+                    h6.mt-3
+                      i.bi.bi-cpu.me-1
+                      | INVENTORY / 物品清单 (#{character.items.length})
                     div
                       each item in character.items
                         span.badge.bg-secondary.me-1= item.name
                   else
-                    p.text-muted.small 无物品
+                    p.text-muted.small [EMPTY] 无物品数据
                   
                   if character.short_memories && character.short_memories.length > 0
-                    h6.mt-3 短时记忆 (#{character.short_memories.length})
+                    h6.mt-3
+                      i.bi.bi-memory.me-1
+                      | RAM / 短期记忆 (#{character.short_memories.length})
                     .memories-container(style="max-height: 150px; overflow-y: auto;")
                       each memory in character.short_memories
                         .border-bottom.pb-2.mb-2
-                          small.text-muted= new Date(memory.timestamp).toLocaleString('zh-CN')
+                          small.text-muted= `[${new Date(memory.timestamp).toLocaleString('zh-CN')}]`
                           p.mb-0.small= memory.content
                   
                   if character.long_memories && character.long_memories.length > 0
-                    h6.mt-3 长时记忆 (#{character.long_memories.length})
+                    h6.mt-3
+                      i.bi.bi-database.me-1
+                      | STORAGE / 长期记忆 (#{character.long_memories.length})
                     .memories-container(style="max-height: 150px; overflow-y: auto;")
                       each memory in character.long_memories
                         .border-bottom.pb-2.mb-2
                           .d-flex.justify-content-between
-                            small.text-muted= new Date(memory.timestamp).toLocaleString('zh-CN')
-                            span.badge.bg-warning 重要性: #{memory.importance}
+                            small.text-muted= `[${new Date(memory.timestamp).toLocaleString('zh-CN')}]`
+                            span.badge.bg-warning PRIORITY: #{memory.importance}
                           p.mb-0.small= memory.content
 
