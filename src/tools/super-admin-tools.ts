@@ -1,144 +1,169 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { PermissionService } from '../services/PermissionService.js';
 import { CharacterService } from '../services/CharacterService.js';
+import { SceneService } from '../services/SceneService.js';
+import { ItemService } from '../services/ItemService.js';
 import { LoggingService } from '../services/LoggingService.js';
-import { PermissionLevel } from '../models/Permission.js';
+import { IdentityService } from '../services/IdentityService.js';
+import { IdentityRole } from '../models/Identity.js';
 
 export class SuperAdminTools {
-  private permissionService: PermissionService;
   private characterService: CharacterService;
+  private sceneService: SceneService;
+  private itemService: ItemService;
   private loggingService: LoggingService;
+  private identityService: IdentityService;
 
   constructor() {
-    this.permissionService = new PermissionService();
     this.characterService = new CharacterService();
+    this.sceneService = new SceneService();
+    this.itemService = new ItemService();
     this.loggingService = new LoggingService();
+    this.identityService = new IdentityService();
   }
 
   getTools(): Tool[] {
     return [
       {
-        name: 'create_character_permission',
-        description: 'Create a permission for a character (requires manager or super admin)',
+        name: 'admin_update_character_identity',
+        description: 'Update a character\'s identity/role (requires super admin)',
         inputSchema: {
           type: 'object',
           properties: {
             admin_secret_key: {
               type: 'string',
-              description: 'Admin secret key for authorization'
+              description: 'Super admin secret key for authorization'
             },
             character_id: {
               type: 'number',
-              description: 'Character ID to create permission for'
+              description: 'Character ID to update'
             },
-            permission_level: {
+            new_identity: {
               type: 'string',
-              enum: ['prisoner', 'visitor', 'citizen', 'manager'],
-              description: 'Permission level to assign'
+              description: 'New identity/role for the character'
             },
-            expires_at: {
+            description: {
               type: 'string',
-              description: 'Optional expiration date (ISO format)'
+              description: 'Optional description of the identity change'
             }
           },
-          required: ['admin_secret_key', 'character_id', 'permission_level']
+          required: ['admin_secret_key', 'character_id', 'new_identity']
         }
       },
       {
-        name: 'update_character_permission',
-        description: 'Update a character\'s permission level (requires manager or super admin)',
+        name: 'admin_create_scene',
+        description: 'Create a new scene in the game world (requires super admin)',
         inputSchema: {
           type: 'object',
           properties: {
             admin_secret_key: {
               type: 'string',
-              description: 'Admin secret key for authorization'
+              description: 'Super admin secret key for authorization'
             },
-            character_id: {
-              type: 'number',
-              description: 'Character ID to update permission for'
-            },
-            new_permission_level: {
+            name: {
               type: 'string',
-              enum: ['prisoner', 'visitor', 'citizen', 'manager'],
-              description: 'New permission level'
+              description: 'Scene name'
+            },
+            description: {
+              type: 'string',
+              description: 'Scene description'
             }
           },
-          required: ['admin_secret_key', 'character_id', 'new_permission_level']
+          required: ['admin_secret_key', 'name', 'description']
         }
       },
       {
-        name: 'revoke_character_permission',
-        description: 'Revoke a character\'s permission (requires manager or super admin)',
+        name: 'admin_create_item',
+        description: 'Create a new item and place it in a scene or give to a character (requires super admin)',
         inputSchema: {
           type: 'object',
           properties: {
             admin_secret_key: {
               type: 'string',
-              description: 'Admin secret key for authorization'
+              description: 'Super admin secret key for authorization'
+            },
+            name: {
+              type: 'string',
+              description: 'Item name'
+            },
+            description: {
+              type: 'string',
+              description: 'Item description'
+            },
+            scene_id: {
+              type: 'number',
+              description: 'Scene ID to place the item (optional)'
             },
             character_id: {
               type: 'number',
-              description: 'Character ID to revoke permission for'
+              description: 'Character ID to give the item to (optional)'
+            }
+          },
+          required: ['admin_secret_key', 'name', 'description']
+        }
+      },
+      {
+        name: 'admin_send_announcement',
+        description: 'Send a global announcement to all players (requires super admin)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            admin_secret_key: {
+              type: 'string',
+              description: 'Super admin secret key for authorization'
+            },
+            title: {
+              type: 'string',
+              description: 'Announcement title'
+            },
+            message: {
+              type: 'string',
+              description: 'Announcement message'
+            },
+            priority: {
+              type: 'string',
+              enum: ['low', 'normal', 'high', 'urgent'],
+              description: 'Announcement priority level'
+            }
+          },
+          required: ['admin_secret_key', 'title', 'message']
+        }
+      },
+      {
+        name: 'admin_modify_character',
+        description: 'Modify character attributes (requires super admin)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            admin_secret_key: {
+              type: 'string',
+              description: 'Super admin secret key for authorization'
+            },
+            character_id: {
+              type: 'number',
+              description: 'Character ID to modify'
+            },
+            name: {
+              type: 'string',
+              description: 'New character name (optional)'
+            },
+            description: {
+              type: 'string',
+              description: 'New character description (optional)'
+            },
+            personality: {
+              type: 'string',
+              description: 'New character personality (optional)'
+            },
+            health: {
+              type: 'number',
+              description: 'New health value (optional)'
+            },
+            mental_state: {
+              type: 'number',
+              description: 'New mental state value (optional)'
             }
           },
           required: ['admin_secret_key', 'character_id']
-        }
-      },
-      {
-        name: 'list_all_permissions',
-        description: 'List all permissions (requires manager or super admin)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            admin_secret_key: {
-              type: 'string',
-              description: 'Admin secret key for authorization'
-            }
-          },
-          required: ['admin_secret_key']
-        }
-      },
-      {
-        name: 'get_permission_stats',
-        description: 'Get permission statistics (requires manager or super admin)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            admin_secret_key: {
-              type: 'string',
-              description: 'Admin secret key for authorization'
-            }
-          },
-          required: ['admin_secret_key']
-        }
-      },
-      {
-        name: 'create_super_admin',
-        description: 'Create a super admin permission (requires super admin)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            super_admin_secret_key: {
-              type: 'string',
-              description: 'Super admin secret key for authorization'
-            }
-          },
-          required: ['super_admin_secret_key']
-        }
-      },
-      {
-        name: 'cleanup_expired_permissions',
-        description: 'Clean up expired permissions (requires super admin)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            super_admin_secret_key: {
-              type: 'string',
-              description: 'Super admin secret key for authorization'
-            }
-          },
-          required: ['super_admin_secret_key']
         }
       }
     ];
@@ -147,20 +172,16 @@ export class SuperAdminTools {
   async handleToolCall(name: string, args: any): Promise<any> {
     try {
       switch (name) {
-        case 'create_character_permission':
-          return await this.createCharacterPermission(args);
-        case 'update_character_permission':
-          return await this.updateCharacterPermission(args);
-        case 'revoke_character_permission':
-          return await this.revokeCharacterPermission(args);
-        case 'list_all_permissions':
-          return await this.listAllPermissions(args);
-        case 'get_permission_stats':
-          return await this.getPermissionStats(args);
-        case 'create_super_admin':
-          return await this.createSuperAdmin(args);
-        case 'cleanup_expired_permissions':
-          return await this.cleanupExpiredPermissions(args);
+        case 'admin_update_character_identity':
+          return await this.updateCharacterIdentity(args);
+        case 'admin_create_scene':
+          return await this.createScene(args);
+        case 'admin_create_item':
+          return await this.createItem(args);
+        case 'admin_send_announcement':
+          return await this.sendAnnouncement(args);
+        case 'admin_modify_character':
+          return await this.modifyCharacter(args);
         default:
           return { success: false, error: `Unknown tool: ${name}` };
       }
@@ -172,200 +193,163 @@ export class SuperAdminTools {
     }
   }
 
-  private async createCharacterPermission(args: any): Promise<any> {
-    const { admin_secret_key, character_id, permission_level, expires_at } = args;
+  private async updateCharacterIdentity(args: any): Promise<any> {
+    const { admin_secret_key, character_id, new_identity, description } = args;
 
-    // Validate admin permission
-    if (!this.permissionService.validateMinimumPermission(admin_secret_key, PermissionLevel.MANAGER)) {
-      return { success: false, error: 'Insufficient permissions. Manager or Super Admin required.' };
+    // Validate super admin identity
+    if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
+      return { success: false, error: 'Insufficient identity role. Super Admin required.' };
     }
 
-    // Validate character exists
+    // Get character
     const character = this.characterService.getCharacterById(character_id);
     if (!character) {
       return { success: false, error: 'Character not found' };
     }
 
-    // Check if character already has permission
-    const existingPermission = this.permissionService.getPermissionByCharacterId(character_id);
-    if (existingPermission) {
-      return { success: false, error: 'Character already has a permission. Use update_character_permission instead.' };
-    }
+    // Update character personality to reflect new identity
+    const updatedCharacter = this.characterService.updateCharacter(character_id, {
+      personality: `${character.personality}\n\n[Identity Update]: ${new_identity}${description ? ` - ${description}` : ''}`
+    });
 
-    const permission = this.permissionService.createDefaultPermission(character_id, permission_level as PermissionLevel);
-    if (expires_at) {
-      this.permissionService.updatePermission(permission.id, { expires_at });
-    }
-
-    const adminPermission = this.permissionService.getPermissionBySecretKey(admin_secret_key);
     this.loggingService.logAction({
-      character_id: adminPermission?.character_id ?? undefined,
-      action_type: 'create_character_permission',
-      action_data: JSON.stringify({ character_id, permission_level, expires_at }),
-      result: `Permission created for character ${character_id} with level ${permission_level}`
+      action_type: 'admin_update_character_identity',
+      action_data: JSON.stringify({ character_id, new_identity, description }),
+      result: `Character ${character.name} identity updated to: ${new_identity}`
     });
 
     return {
       success: true,
-      permission,
-      message: `Permission created successfully for character ${character.name} (${permission_level})`
+      character: updatedCharacter,
+      message: `Character identity updated successfully`
     };
   }
 
-  private async updateCharacterPermission(args: any): Promise<any> {
-    const { admin_secret_key, character_id, new_permission_level } = args;
+  private async createScene(args: any): Promise<any> {
+    const { admin_secret_key, name, description } = args;
 
-    // Validate admin permission
-    if (!this.permissionService.validateMinimumPermission(admin_secret_key, PermissionLevel.MANAGER)) {
-      return { success: false, error: 'Insufficient permissions. Manager or Super Admin required.' };
+    // Validate super admin identity
+    if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
+      return { success: false, error: 'Insufficient identity role. Super Admin required.' };
     }
 
-    // Validate character exists
+    // Create scene
+    const scene = this.sceneService.createScene({
+      name,
+      description
+    });
+
+    this.loggingService.logAction({
+      action_type: 'admin_create_scene',
+      action_data: JSON.stringify({ name, description }),
+      result: `Scene created with ID ${scene.id}`
+    });
+
+    return {
+      success: true,
+      scene,
+      message: `Scene "${name}" created successfully`
+    };
+  }
+
+  private async createItem(args: any): Promise<any> {
+    const { admin_secret_key, name, description, scene_id, character_id } = args;
+
+    // Validate super admin identity
+    if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
+      return { success: false, error: 'Insufficient identity role. Super Admin required.' };
+    }
+
+    // Create item
+    const item = this.itemService.createItem({
+      name,
+      description,
+      scene_id: scene_id || null,
+      character_id: character_id || null
+    });
+
+    const location = scene_id ? `scene ${scene_id}` : character_id ? `character ${character_id}` : 'no location';
+
+    this.loggingService.logAction({
+      action_type: 'admin_create_item',
+      action_data: JSON.stringify({ name, description, scene_id, character_id }),
+      result: `Item created with ID ${item.id} at ${location}`
+    });
+
+    return {
+      success: true,
+      item,
+      message: `Item "${name}" created successfully`
+    };
+  }
+
+  private async sendAnnouncement(args: any): Promise<any> {
+    const { admin_secret_key, title, message, priority = 'normal' } = args;
+
+    // Validate super admin identity
+    if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
+      return { success: false, error: 'Insufficient identity role. Super Admin required.' };
+    }
+
+    // Log announcement
+    this.loggingService.logAction({
+      action_type: 'admin_send_announcement',
+      action_data: JSON.stringify({ title, message, priority }),
+      result: `Announcement sent: ${title}`
+    });
+
+    // In a real implementation, this would broadcast to all connected clients
+    // For now, we'll just log it
+    const announcement = {
+      id: Date.now(),
+      title,
+      message,
+      priority,
+      timestamp: new Date().toISOString(),
+      type: 'global_announcement'
+    };
+
+    return {
+      success: true,
+      announcement,
+      message: `Announcement "${title}" sent successfully`
+    };
+  }
+
+  private async modifyCharacter(args: any): Promise<any> {
+    const { admin_secret_key, character_id, name, description, personality, health, mental_state } = args;
+
+    // Validate super admin identity
+    if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
+      return { success: false, error: 'Insufficient identity role. Super Admin required.' };
+    }
+
+    // Get character
     const character = this.characterService.getCharacterById(character_id);
     if (!character) {
       return { success: false, error: 'Character not found' };
     }
 
-    // Get existing permission
-    const existingPermission = this.permissionService.getPermissionByCharacterId(character_id);
-    if (!existingPermission) {
-      return { success: false, error: 'Character does not have a permission. Use create_character_permission instead.' };
-    }
+    // Update character
+    const updates: any = {};
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (personality !== undefined) updates.personality = personality;
+    if (health !== undefined) updates.health = health;
+    if (mental_state !== undefined) updates.mental_state = mental_state;
 
-    const updatedPermission = this.permissionService.updatePermission(existingPermission.id, {
-      permission_level: new_permission_level as PermissionLevel
-    });
-
-    const adminPermission = this.permissionService.getPermissionBySecretKey(admin_secret_key);
-    this.loggingService.logAction({
-      character_id: adminPermission?.character_id ?? undefined,
-      action_type: 'update_character_permission',
-      action_data: JSON.stringify({ character_id, new_permission_level }),
-      result: `Permission updated for character ${character_id} to level ${new_permission_level}`
-    });
-
-    return {
-      success: true,
-      permission: updatedPermission,
-      message: `Permission updated successfully for character ${character.name} (${new_permission_level})`
-    };
-  }
-
-  private async revokeCharacterPermission(args: any): Promise<any> {
-    const { admin_secret_key, character_id } = args;
-
-    // Validate admin permission
-    if (!this.permissionService.validateMinimumPermission(admin_secret_key, PermissionLevel.MANAGER)) {
-      return { success: false, error: 'Insufficient permissions. Manager or Super Admin required.' };
-    }
-
-    // Validate character exists
-    const character = this.characterService.getCharacterById(character_id);
-    if (!character) {
-      return { success: false, error: 'Character not found' };
-    }
-
-    // Get existing permission
-    const existingPermission = this.permissionService.getPermissionByCharacterId(character_id);
-    if (!existingPermission) {
-      return { success: false, error: 'Character does not have a permission to revoke.' };
-    }
-
-    const revokedPermission = this.permissionService.deactivatePermission(existingPermission.id);
-
-    const adminPermission = this.permissionService.getPermissionBySecretKey(admin_secret_key);
-    this.loggingService.logAction({
-      character_id: adminPermission?.character_id ?? undefined,
-      action_type: 'revoke_character_permission',
-      action_data: JSON.stringify({ character_id }),
-      result: `Permission revoked for character ${character_id}`
-    });
-
-    return {
-      success: true,
-      permission: revokedPermission,
-      message: `Permission revoked successfully for character ${character.name}`
-    };
-  }
-
-  private async listAllPermissions(args: any): Promise<any> {
-    const { admin_secret_key } = args;
-
-    // Validate admin permission
-    if (!this.permissionService.validateMinimumPermission(admin_secret_key, PermissionLevel.MANAGER)) {
-      return { success: false, error: 'Insufficient permissions. Manager or Super Admin required.' };
-    }
-
-    const permissions = this.permissionService.getAllPermissions();
-
-    return {
-      success: true,
-      permissions,
-      count: permissions.length,
-      message: 'All permissions retrieved successfully'
-    };
-  }
-
-  private async getPermissionStats(args: any): Promise<any> {
-    const { admin_secret_key } = args;
-
-    // Validate admin permission
-    if (!this.permissionService.validateMinimumPermission(admin_secret_key, PermissionLevel.MANAGER)) {
-      return { success: false, error: 'Insufficient permissions. Manager or Super Admin required.' };
-    }
-
-    const stats = this.permissionService.getPermissionStats();
-
-    return {
-      success: true,
-      stats,
-      message: 'Permission statistics retrieved successfully'
-    };
-  }
-
-  private async createSuperAdmin(args: any): Promise<any> {
-    const { super_admin_secret_key } = args;
-
-    // Validate super admin permission
-    if (!this.permissionService.validateMinimumPermission(super_admin_secret_key, PermissionLevel.SUPER_ADMIN)) {
-      return { success: false, error: 'Insufficient permissions. Super Admin required.' };
-    }
-
-    const superAdminPermission = this.permissionService.createSuperAdminPermission();
+    const updatedCharacter = this.characterService.updateCharacter(character_id, updates);
 
     this.loggingService.logAction({
-      action_type: 'create_super_admin',
-      action_data: JSON.stringify({}),
-      result: `New super admin permission created with ID ${superAdminPermission.id}`
+      action_type: 'admin_modify_character',
+      action_data: JSON.stringify(updates),
+      result: `Character ${character.name} modified`
     });
 
     return {
       success: true,
-      permission: superAdminPermission,
-      message: 'Super admin permission created successfully'
-    };
-  }
-
-  private async cleanupExpiredPermissions(args: any): Promise<any> {
-    const { super_admin_secret_key } = args;
-
-    // Validate super admin permission
-    if (!this.permissionService.validateMinimumPermission(super_admin_secret_key, PermissionLevel.SUPER_ADMIN)) {
-      return { success: false, error: 'Insufficient permissions. Super Admin required.' };
-    }
-
-    const cleanedCount = this.permissionService.cleanupExpiredPermissions();
-
-    this.loggingService.logAction({
-      action_type: 'cleanup_expired_permissions',
-      action_data: JSON.stringify({}),
-      result: `Cleaned up ${cleanedCount} expired permissions`
-    });
-
-    return {
-      success: true,
-      cleaned_count: cleanedCount,
-      message: `Successfully cleaned up ${cleanedCount} expired permissions`
+      character: updatedCharacter,
+      message: `Character modified successfully`
     };
   }
 }

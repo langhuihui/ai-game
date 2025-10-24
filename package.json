@@ -1,13 +1,18 @@
 {
-  "name": "mcp-game-server",
+  "name": "matrix-game",
   "version": "1.0.0",
-  "description": "Multiplayer text-based game server with MCP interfaces",
+  "description": "Matrix-inspired multiplayer text-based game server with MCP interfaces",
   "main": "dist/index.js",
+  "bin": {
+    "matrix-game": "./dist/index.js",
+    "matrix": "./dist/index.js"
+  },
   "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
@@ -26,8 +31,22 @@
     "mcp",
     "game",
     "multiplayer",
-    "text-based"
+    "text-based",
+    "cli",
+    "npx"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "package.json"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  }
 }

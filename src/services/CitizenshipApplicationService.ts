@@ -7,17 +7,17 @@ import {
   GameRules
 } from '../models/CitizenshipApplication.js';
 import { CharacterService } from './CharacterService.js';
-import { PermissionService } from './PermissionService.js';
-import { PermissionLevel } from '../models/Permission.js';
+import { IdentityService } from './IdentityService.js';
+import { IdentityRole } from '../models/Identity.js';
 
 export class CitizenshipApplicationService {
   private db = gameDb.getDatabase();
   private characterService: CharacterService;
-  private permissionService: PermissionService;
+  private identityService: IdentityService;
 
   constructor() {
     this.characterService = new CharacterService();
-    this.permissionService = new PermissionService();
+    this.identityService = new IdentityService();
   }
 
   // 创建公民身份申请
@@ -110,7 +110,7 @@ export class CitizenshipApplicationService {
     });
 
     // 创建公民权限
-    const permission = this.permissionService.createDefaultPermission(character.id, PermissionLevel.CITIZEN);
+    const identity = this.identityService.createDefaultIdentity(character.id, IdentityRole.CITIZEN);
 
     // 更新申请记录，添加创建的角色ID
     const stmt = this.db.prepare(`
@@ -118,7 +118,7 @@ export class CitizenshipApplicationService {
       SET created_character_id = ?, created_permission_id = ?
       WHERE id = ?
     `);
-    stmt.run(character.id, permission.id, application.id);
+    stmt.run(character.id, identity.id, application.id);
   }
 
   // 为申请生成唯一的角色名称（排除当前申请）
@@ -152,13 +152,13 @@ export class CitizenshipApplicationService {
     const character = this.characterService.getCharacterById(characterId);
     if (!character) return null;
 
-    const permission = this.permissionService.getPermissionByCharacterId(characterId);
-    if (!permission) return null;
+    const identity = this.identityService.getIdentityByCharacterId(characterId);
+    if (!identity) return null;
 
     return {
       id: character.id,
       name: character.name,
-      permission_level: permission.permission_level
+      identity_role: identity.identity_role
     };
   }
 
@@ -174,13 +174,13 @@ export class CitizenshipApplicationService {
         "角色信息保护：只能看到其他角色的ID和身份等级",
         "详细角色信息需要通过对话了解",
         "游客可以申请成为公民，需要管理员审核",
-        "不同身份等级有不同的权限和限制"
+        "不同身份等级有不同的能力和限制"
       ],
-      permissions: {
+      identities: {
         visitor: {
           name: "游客",
           description: "临时访问者，权限有限",
-          permissions: [
+          capabilities: [
             "查看场景和角色基本信息",
             "发送和接收消息",
             "申请成为公民"
@@ -189,8 +189,8 @@ export class CitizenshipApplicationService {
         citizen: {
           name: "公民",
           description: "正式游戏参与者",
-          permissions: [
-            "游客的所有权限",
+          capabilities: [
+            "游客的所有能力",
             "在场景间移动",
             "拾取和使用物品",
             "发起和参与交易",
@@ -200,20 +200,20 @@ export class CitizenshipApplicationService {
         manager: {
           name: "管理者",
           description: "游戏管理员",
-          permissions: [
-            "公民的所有权限",
+          capabilities: [
+            "公民的所有能力",
             "创建和管理场景",
             "创建和管理物品",
             "审核公民申请",
-            "管理角色权限",
+            "管理角色身份",
             "查看服务器日志"
           ]
         },
         super_admin: {
           name: "超级管理员",
           description: "系统管理员（隐藏身份）",
-          permissions: [
-            "所有权限",
+          capabilities: [
+            "所有能力",
             "服务器管理",
             "数据库管理",
             "系统配置"
@@ -235,7 +235,7 @@ export class CitizenshipApplicationService {
         ],
         character_interaction: [
           "通过对话了解其他角色的详细信息",
-          "不同身份等级有不同的互动权限",
+          "不同身份等级有不同的互动能力",
           "游客需要申请成为公民才能参与更多活动",
           "管理者可以审核和管理其他角色"
         ]

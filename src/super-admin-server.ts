@@ -12,12 +12,13 @@ import { fileURLToPath } from 'url';
 import { ToolHandler } from './utils/ToolRouter.js';
 
 import { SuperAdminTools } from './tools/super-admin-tools.js';
+import { SuperAdminResourceTools } from './tools/super-admin-resource-tools.js';
 import { CharacterService } from './services/CharacterService.js';
 import { SceneService } from './services/SceneService.js';
 import { ItemService } from './services/ItemService.js';
 import { MemoryService } from './services/MemoryService.js';
 import { LoggingService } from './services/LoggingService.js';
-import { PermissionService } from './services/PermissionService.js';
+import { IdentityService } from './services/IdentityService.js';
 import { CitizenshipApplicationService } from './services/CitizenshipApplicationService.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,12 +28,13 @@ export class SuperAdminServer implements ToolHandler {
   private mcpServer: Server;
   private webApp: express.Application;
   private superAdminTools: SuperAdminTools;
+  private superAdminResourceTools: SuperAdminResourceTools;
   private characterService: CharacterService;
   private sceneService: SceneService;
   private itemService: ItemService;
   private memoryService: MemoryService;
   private loggingService: LoggingService;
-  private permissionService: PermissionService;
+  private identityService: IdentityService;
   private citizenshipService: CitizenshipApplicationService;
   private connectedClients: Set<any> = new Set();
   private permissionConnections: Map<string, string> = new Map(); // connectionId -> secretKey
@@ -56,12 +58,13 @@ export class SuperAdminServer implements ToolHandler {
 
     // Initialize Services
     this.superAdminTools = new SuperAdminTools();
+    this.superAdminResourceTools = new SuperAdminResourceTools();
     this.characterService = new CharacterService();
     this.sceneService = new SceneService();
     this.itemService = new ItemService();
     this.memoryService = new MemoryService();
     this.loggingService = new LoggingService();
-    this.permissionService = new PermissionService();
+    this.identityService = new IdentityService();
     this.citizenshipService = new CitizenshipApplicationService();
 
     this.setupMCPHandlers();
@@ -85,7 +88,7 @@ export class SuperAdminServer implements ToolHandler {
         const scenes = this.sceneService.getAllScenes();
         const items = this.itemService.getAllItems();
         const recentLogs = this.loggingService.getAllLogs(10);
-        const permissionStats = this.permissionService.getPermissionStats();
+        const identityStats = this.identityService.getIdentityStats();
 
         res.json({
           success: true,
@@ -94,7 +97,7 @@ export class SuperAdminServer implements ToolHandler {
             totalScenes: scenes.length,
             totalItems: items.length,
             recentActivity: recentLogs.length,
-            permissionStats: permissionStats
+            identityStats: identityStats
           }
         });
       } catch (error) {
@@ -105,8 +108,8 @@ export class SuperAdminServer implements ToolHandler {
     // Permission endpoints
     this.webApp.get('/api/permissions', (req, res) => {
       try {
-        const permissions = this.permissionService.getAllPermissions();
-        res.json({ success: true, permissions });
+        const identities = this.identityService.getAllIdentities();
+        res.json({ success: true, identities });
       } catch (error) {
         res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
       }
@@ -114,7 +117,7 @@ export class SuperAdminServer implements ToolHandler {
 
     this.webApp.get('/api/permissions/stats', (req, res) => {
       try {
-        const stats = this.permissionService.getPermissionStats();
+        const stats = this.identityService.getIdentityStats();
         res.json({ success: true, stats });
       } catch (error) {
         res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
@@ -125,7 +128,10 @@ export class SuperAdminServer implements ToolHandler {
   private setupMCPHandlers() {
     // List tools handler
     this.mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
-      const allTools = this.superAdminTools.getTools();
+      const allTools = [
+        ...this.superAdminTools.getTools(),
+        ...this.superAdminResourceTools.getTools()
+      ];
 
       return {
         tools: allTools,
@@ -142,6 +148,8 @@ export class SuperAdminServer implements ToolHandler {
         // Route to super admin tool handler
         if (this.superAdminTools.getTools().some(tool => tool.name === name)) {
           result = await this.superAdminTools.handleToolCall(name, args);
+        } else if (this.superAdminResourceTools.getTools().some(tool => tool.name === name)) {
+          result = await this.superAdminResourceTools.handleToolCall(name, args);
         } else {
           return {
             content: [
@@ -191,7 +199,14 @@ export class SuperAdminServer implements ToolHandler {
 
   // 获取超级管理员工具
   getTools() {
-    return this.superAdminTools.getTools();
+    const adminTools = this.superAdminTools.getTools();
+    const resourceTools = this.superAdminResourceTools.getTools();
+    console.log('SuperAdmin tools:', adminTools.length);
+    console.log('SuperAdmin resource tools:', resourceTools.length);
+    return [
+      ...adminTools,
+      ...resourceTools
+    ];
   }
 
   // 获取超级管理员工具（保持向后兼容）
@@ -201,7 +216,17 @@ export class SuperAdminServer implements ToolHandler {
 
   // 处理工具调用（实现ToolHandler接口）
   async handleToolCall(name: string, args: any): Promise<any> {
-    return await this.superAdminTools.handleToolCall(name, args);
+    // Check if it's a super admin tool
+    if (this.superAdminTools.getTools().some(tool => tool.name === name)) {
+      return await this.superAdminTools.handleToolCall(name, args);
+    }
+
+    // Check if it's a resource tool
+    if (this.superAdminResourceTools.getTools().some(tool => tool.name === name)) {
+      return await this.superAdminResourceTools.handleToolCall(name, args);
+    }
+
+    return { success: false, error: `Unknown tool: ${name}` };
   }
 
   // 处理超级管理员工具调用（保持向后兼容）
@@ -248,10 +273,10 @@ export class SuperAdminServer implements ToolHandler {
       let connectionStatus = 'guest';
 
       if (secretKey) {
-        permissionInfo = this.permissionService.getPermissionInfo(secretKey);
+        permissionInfo = this.identityService.getIdentityInfo(secretKey);
         if (permissionInfo) {
           connectionStatus = 'authenticated';
-          console.log('✅ Valid secret key provided, permission level:', permissionInfo.permission_level);
+          console.log('✅ Valid secret key provided, identity role:', permissionInfo.identity_role);
         } else {
           console.log('❌ Invalid secret key provided');
         }
@@ -274,7 +299,7 @@ export class SuperAdminServer implements ToolHandler {
         permission_info: permissionInfo,
         needs_authentication: !secretKey || !permissionInfo,
         message: permissionInfo ?
-          `Connected with ${permissionInfo.permission_level} permissions` :
+          `Connected with ${permissionInfo.identity_role} role` :
           secretKey ? 'Invalid secret key. Please check your credentials.' : 'Connected as guest. Super Admin secret key required for full access.'
       };
       res.write(`data: ${JSON.stringify(connectionResponse)}\n\n`);

@@ -137,6 +137,7 @@ export class GameDatabase {
     `);
 
     // Permissions table
+    // Permissions table (兼容旧版本)
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS permissions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -149,6 +150,23 @@ export class GameDatabase {
         FOREIGN KEY (character_id) REFERENCES characters (id)
       )
     `);
+
+    // Identities table (新的身份系统表)
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS identities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        character_id INTEGER,
+        identity_role TEXT NOT NULL CHECK (identity_role IN ('prisoner', 'visitor', 'citizen', 'manager', 'super_admin')),
+        secret_key TEXT NOT NULL UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        expires_at DATETIME,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY (character_id) REFERENCES characters (id)
+      )
+    `);
+
+    // 迁移旧的permissions数据到identities表
+    this.migratePermissionsToIdentities();
 
     // Citizenship applications table
     this.db.exec(`
@@ -169,7 +187,7 @@ export class GameDatabase {
         created_permission_id INTEGER,
         FOREIGN KEY (reviewed_by) REFERENCES characters (id),
         FOREIGN KEY (created_character_id) REFERENCES characters (id),
-        FOREIGN KEY (created_permission_id) REFERENCES permissions (id)
+        FOREIGN KEY (created_permission_id) REFERENCES identities (id)
       )
     `);
 
@@ -194,6 +212,10 @@ export class GameDatabase {
       CREATE INDEX IF NOT EXISTS idx_permissions_secret_key ON permissions (secret_key);
       CREATE INDEX IF NOT EXISTS idx_permissions_level ON permissions (permission_level);
       CREATE INDEX IF NOT EXISTS idx_permissions_active ON permissions (is_active);
+      CREATE INDEX IF NOT EXISTS idx_identities_character ON identities (character_id);
+      CREATE INDEX IF NOT EXISTS idx_identities_secret_key ON identities (secret_key);
+      CREATE INDEX IF NOT EXISTS idx_identities_role ON identities (identity_role);
+      CREATE INDEX IF NOT EXISTS idx_identities_active ON identities (is_active);
       CREATE INDEX IF NOT EXISTS idx_citizenship_applications_character_id ON citizenship_applications (character_id);
       CREATE INDEX IF NOT EXISTS idx_citizenship_applications_status ON citizenship_applications (status);
       CREATE INDEX IF NOT EXISTS idx_citizenship_applications_created_at ON citizenship_applications (created_at);
@@ -206,6 +228,28 @@ export class GameDatabase {
 
   close() {
     this.db.close();
+  }
+
+  /**
+   * 迁移旧的permissions数据到新的identities表
+   */
+  private migratePermissionsToIdentities() {
+    // 检查identities表是否为空
+    const count = this.db.prepare('SELECT COUNT(*) as count FROM identities').get() as { count: number; };
+
+    // 如果identities表已有数据，跳过迁移
+    if (count.count > 0) {
+      return;
+    }
+
+    // 从permissions表迁移数据到identities表
+    this.db.exec(`
+      INSERT OR IGNORE INTO identities (character_id, identity_role, secret_key, created_at, expires_at, is_active)
+      SELECT character_id, permission_level, secret_key, created_at, expires_at, is_active
+      FROM permissions
+    `);
+
+    console.log('已将permissions表数据迁移到identities表');
   }
 }
 

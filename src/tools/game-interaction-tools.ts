@@ -1,21 +1,153 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { CharacterService } from '../services/CharacterService.js';
 import { ItemService } from '../services/ItemService.js';
+import { MemoryService } from '../services/MemoryService.js';
 import { LoggingService } from '../services/LoggingService.js';
 
-export class TradeTools {
+export class GameInteractionTools {
   private characterService: CharacterService;
   private itemService: ItemService;
+  private memoryService: MemoryService;
   private loggingService: LoggingService;
 
   constructor() {
     this.characterService = new CharacterService();
     this.itemService = new ItemService();
+    this.memoryService = new MemoryService();
     this.loggingService = new LoggingService();
   }
 
   getTools(): Tool[] {
     return [
+      // 记忆管理工具
+      {
+        name: 'add_short_memory',
+        description: 'Add a short-term memory to a character',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            character_id: {
+              type: 'number',
+              description: 'Character ID'
+            },
+            content: {
+              type: 'string',
+              description: 'Memory content'
+            }
+          },
+          required: ['character_id', 'content']
+        }
+      },
+      {
+        name: 'add_long_memory',
+        description: 'Add a long-term memory to a character',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            character_id: {
+              type: 'number',
+              description: 'Character ID'
+            },
+            content: {
+              type: 'string',
+              description: 'Memory content'
+            },
+            importance: {
+              type: 'number',
+              description: 'Memory importance (1-10, default: 5)',
+              minimum: 1,
+              maximum: 10
+            }
+          },
+          required: ['character_id', 'content']
+        }
+      },
+      {
+        name: 'update_short_memory',
+        description: 'Update a short-term memory',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            memory_id: {
+              type: 'number',
+              description: 'Memory ID'
+            },
+            content: {
+              type: 'string',
+              description: 'New memory content'
+            }
+          },
+          required: ['memory_id']
+        }
+      },
+      {
+        name: 'update_long_memory',
+        description: 'Update a long-term memory',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            memory_id: {
+              type: 'number',
+              description: 'Memory ID'
+            },
+            content: {
+              type: 'string',
+              description: 'New memory content'
+            },
+            importance: {
+              type: 'number',
+              description: 'New importance level (1-10)',
+              minimum: 1,
+              maximum: 10
+            }
+          },
+          required: ['memory_id']
+        }
+      },
+      {
+        name: 'delete_short_memory',
+        description: 'Delete a short-term memory',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            memory_id: {
+              type: 'number',
+              description: 'Memory ID'
+            }
+          },
+          required: ['memory_id']
+        }
+      },
+      {
+        name: 'delete_long_memory',
+        description: 'Delete a long-term memory',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            memory_id: {
+              type: 'number',
+              description: 'Memory ID'
+            }
+          },
+          required: ['memory_id']
+        }
+      },
+      {
+        name: 'delete_all_memories',
+        description: 'Delete all memories for a character',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            character_id: {
+              type: 'number',
+              description: 'Character ID'
+            }
+          },
+          required: ['character_id']
+        }
+      },
+
+      // 交易工具
       {
         name: 'create_trade_offer',
         description: 'Create a trade offer to another character',
@@ -44,34 +176,6 @@ export class TradeTools {
             }
           },
           required: ['from_character_id', 'to_character_id', 'currency_amount']
-        }
-      },
-      {
-        name: 'get_trade_offers',
-        description: 'Get all trade offers for a character',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            character_id: {
-              type: 'number',
-              description: 'ID of the character'
-            }
-          },
-          required: ['character_id']
-        }
-      },
-      {
-        name: 'get_pending_trade_offers',
-        description: 'Get pending trade offers for a character',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            character_id: {
-              type: 'number',
-              description: 'ID of the character'
-            }
-          },
-          required: ['character_id']
         }
       },
       {
@@ -107,6 +211,8 @@ export class TradeTools {
           required: ['offer_id']
         }
       },
+
+      // 直接消息工具
       {
         name: 'send_direct_message',
         description: 'Send a direct message to another character in the same scene',
@@ -131,38 +237,6 @@ export class TradeTools {
             }
           },
           required: ['from_character_id', 'to_character_id', 'message', 'scene_id']
-        }
-      },
-      {
-        name: 'get_direct_messages',
-        description: 'Get direct messages for a character',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            character_id: {
-              type: 'number',
-              description: 'ID of the character'
-            },
-            limit: {
-              type: 'number',
-              description: 'Maximum number of messages to return (default: 50)'
-            }
-          },
-          required: ['character_id']
-        }
-      },
-      {
-        name: 'get_unread_messages',
-        description: 'Get unread direct messages for a character',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            character_id: {
-              type: 'number',
-              description: 'ID of the character'
-            }
-          },
-          required: ['character_id']
         }
       },
       {
@@ -199,22 +273,28 @@ export class TradeTools {
   async handleToolCall(name: string, args: any): Promise<any> {
     try {
       switch (name) {
+        case 'add_short_memory':
+          return await this.addShortMemory(args);
+        case 'add_long_memory':
+          return await this.addLongMemory(args);
+        case 'update_short_memory':
+          return await this.updateShortMemory(args);
+        case 'update_long_memory':
+          return await this.updateLongMemory(args);
+        case 'delete_short_memory':
+          return await this.deleteShortMemory(args);
+        case 'delete_long_memory':
+          return await this.deleteLongMemory(args);
+        case 'delete_all_memories':
+          return await this.deleteAllMemories(args);
         case 'create_trade_offer':
           return await this.createTradeOffer(args);
-        case 'get_trade_offers':
-          return await this.getTradeOffers(args);
-        case 'get_pending_trade_offers':
-          return await this.getPendingTradeOffers(args);
         case 'respond_to_trade_offer':
           return await this.respondToTradeOffer(args);
         case 'cancel_trade_offer':
           return await this.cancelTradeOffer(args);
         case 'send_direct_message':
           return await this.sendDirectMessage(args);
-        case 'get_direct_messages':
-          return await this.getDirectMessages(args);
-        case 'get_unread_messages':
-          return await this.getUnreadMessages(args);
         case 'mark_message_as_read':
           return await this.markMessageAsRead(args);
         case 'mark_all_messages_as_read':
@@ -230,6 +310,108 @@ export class TradeTools {
     }
   }
 
+  // 记忆管理方法
+  private async addShortMemory(args: any): Promise<any> {
+    try {
+      const memory = this.memoryService.addShortMemory(args);
+      return {
+        success: true,
+        memory,
+        message: 'Short-term memory added successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  private async addLongMemory(args: any): Promise<any> {
+    try {
+      const memory = this.memoryService.addLongMemory(args);
+      return {
+        success: true,
+        memory,
+        message: 'Long-term memory added successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  private async updateShortMemory(args: any): Promise<any> {
+    try {
+      const memory = this.memoryService.updateShortMemory(args.memory_id, args);
+      if (!memory) {
+        return {
+          success: false,
+          error: 'Memory not found'
+        };
+      }
+      return {
+        success: true,
+        memory,
+        message: 'Short-term memory updated successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  private async updateLongMemory(args: any): Promise<any> {
+    try {
+      const memory = this.memoryService.updateLongMemory(args.memory_id, args);
+      if (!memory) {
+        return {
+          success: false,
+          error: 'Memory not found'
+        };
+      }
+      return {
+        success: true,
+        memory,
+        message: 'Long-term memory updated successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  private async deleteShortMemory(args: any): Promise<any> {
+    const shortDeleted = this.memoryService.deleteShortMemory(args.memory_id);
+    return {
+      success: shortDeleted,
+      message: shortDeleted ? 'Short-term memory deleted successfully' : 'Memory not found'
+    };
+  }
+
+  private async deleteLongMemory(args: any): Promise<any> {
+    const longDeleted = this.memoryService.deleteLongMemory(args.memory_id);
+    return {
+      success: longDeleted,
+      message: longDeleted ? 'Long-term memory deleted successfully' : 'Memory not found'
+    };
+  }
+
+  private async deleteAllMemories(args: any): Promise<any> {
+    const allDeleted = this.memoryService.deleteAllMemories(args.character_id);
+    return {
+      success: allDeleted,
+      message: allDeleted ? 'All memories deleted successfully' : 'No memories found'
+    };
+  }
+
+  // 交易管理方法
   private async createTradeOffer(args: any): Promise<any> {
     const { from_character_id, to_character_id, currency_amount, item_id, message } = args;
 
@@ -284,40 +466,6 @@ export class TradeTools {
     };
   }
 
-  private async getTradeOffers(args: any): Promise<any> {
-    const { character_id } = args;
-
-    const character = this.characterService.getCharacterById(character_id);
-    if (!character) {
-      return { success: false, error: 'Character not found' };
-    }
-
-    const tradeOffers = this.characterService.getTradeOffersByCharacter(character_id);
-
-    return {
-      success: true,
-      tradeOffers,
-      count: tradeOffers.length
-    };
-  }
-
-  private async getPendingTradeOffers(args: any): Promise<any> {
-    const { character_id } = args;
-
-    const character = this.characterService.getCharacterById(character_id);
-    if (!character) {
-      return { success: false, error: 'Character not found' };
-    }
-
-    const pendingOffers = this.characterService.getPendingTradeOffers(character_id);
-
-    return {
-      success: true,
-      pendingOffers,
-      count: pendingOffers.length
-    };
-  }
-
   private async respondToTradeOffer(args: any): Promise<any> {
     const { offer_id, response } = args;
 
@@ -362,6 +510,7 @@ export class TradeTools {
     };
   }
 
+  // 直接消息方法
   private async sendDirectMessage(args: any): Promise<any> {
     const { from_character_id, to_character_id, message, scene_id } = args;
 
@@ -399,40 +548,6 @@ export class TradeTools {
       success: true,
       directMessage,
       message: 'Direct message sent successfully'
-    };
-  }
-
-  private async getDirectMessages(args: any): Promise<any> {
-    const { character_id, limit = 50 } = args;
-
-    const character = this.characterService.getCharacterById(character_id);
-    if (!character) {
-      return { success: false, error: 'Character not found' };
-    }
-
-    const messages = this.characterService.getDirectMessages(character_id, limit);
-
-    return {
-      success: true,
-      messages,
-      count: messages.length
-    };
-  }
-
-  private async getUnreadMessages(args: any): Promise<any> {
-    const { character_id } = args;
-
-    const character = this.characterService.getCharacterById(character_id);
-    if (!character) {
-      return { success: false, error: 'Character not found' };
-    }
-
-    const unreadMessages = this.characterService.getUnreadMessages(character_id);
-
-    return {
-      success: true,
-      unreadMessages,
-      count: unreadMessages.length
     };
   }
 

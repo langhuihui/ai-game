@@ -5,7 +5,7 @@ import { ItemService } from '../services/ItemService.js';
 import { MemoryService } from '../services/MemoryService.js';
 import { LoggingService } from '../services/LoggingService.js';
 
-export class ActionTools {
+export class GameCoreTools {
   private characterService = new CharacterService();
   private sceneService = new SceneService();
   private itemService = new ItemService();
@@ -14,6 +14,136 @@ export class ActionTools {
 
   getTools(): Tool[] {
     return [
+      // 角色管理工具
+      {
+        name: 'create_character',
+        description: 'Create a new character in the game',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Character name (must be unique)'
+            },
+            description: {
+              type: 'string',
+              description: 'Physical description of the character'
+            },
+            personality: {
+              type: 'string',
+              description: 'Personality traits and background'
+            },
+            health: {
+              type: 'number',
+              description: 'Initial health (0-100, default: 100)',
+              minimum: 0,
+              maximum: 100
+            },
+            mental_state: {
+              type: 'number',
+              description: 'Initial mental state (0-100, default: 100)',
+              minimum: 0,
+              maximum: 100
+            },
+            current_scene_id: {
+              type: 'number',
+              description: 'ID of the scene where character starts (optional)'
+            }
+          },
+          required: ['name', 'description', 'personality']
+        }
+      },
+      {
+        name: 'update_character',
+        description: 'Update character information',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            character_id: {
+              type: 'number',
+              description: 'Character ID'
+            },
+            name: {
+              type: 'string',
+              description: 'New character name'
+            },
+            description: {
+              type: 'string',
+              description: 'New character description'
+            },
+            personality: {
+              type: 'string',
+              description: 'New personality description'
+            },
+            health: {
+              type: 'number',
+              description: 'New health value (0-100)',
+              minimum: 0,
+              maximum: 100
+            },
+            mental_state: {
+              type: 'number',
+              description: 'New mental state value (0-100)',
+              minimum: 0,
+              maximum: 100
+            },
+            current_scene_id: {
+              type: 'number',
+              description: 'New current scene ID'
+            }
+          },
+          required: ['character_id']
+        }
+      },
+
+      // 场景管理工具
+      {
+        name: 'create_scene',
+        description: 'Create a new scene in the game world',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Scene name (must be unique)'
+            },
+            description: {
+              type: 'string',
+              description: 'Detailed description of the scene'
+            }
+          },
+          required: ['name', 'description']
+        }
+      },
+      {
+        name: 'connect_scenes',
+        description: 'Create a connection between two scenes',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            from_scene_id: {
+              type: 'number',
+              description: 'Source scene ID'
+            },
+            to_scene_id: {
+              type: 'number',
+              description: 'Destination scene ID'
+            },
+            connection_type: {
+              type: 'string',
+              enum: ['door', 'road'],
+              description: 'Type of connection'
+            },
+            description: {
+              type: 'string',
+              description: 'Description of the connection'
+            }
+          },
+          required: ['from_scene_id', 'to_scene_id', 'connection_type', 'description']
+        }
+      },
+
+      // 角色行为工具
       {
         name: 'move_character',
         description: 'Move a character to an adjacent scene',
@@ -72,6 +202,8 @@ export class ActionTools {
           required: ['from_character_id', 'to_character_id', 'message']
         }
       },
+
+      // 物品操作工具
       {
         name: 'pick_item',
         description: 'Pick up an item from the current scene',
@@ -151,26 +283,78 @@ export class ActionTools {
           },
           required: ['name', 'description']
         }
-      },
-      {
-        name: 'get_character_items',
-        description: 'Get all items owned by a character',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            character_id: {
-              type: 'number',
-              description: 'Character ID'
-            }
-          },
-          required: ['character_id']
-        }
       }
     ];
   }
 
   async handleToolCall(name: string, args: any): Promise<any> {
     switch (name) {
+      case 'create_character':
+        try {
+          const character = this.characterService.createCharacter(args);
+          return {
+            success: true,
+            character,
+            message: `Character "${character.name}" created successfully with ID ${character.id}`
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
+        }
+
+      case 'update_character':
+        try {
+          const updatedCharacter = this.characterService.updateCharacter(args.character_id, args);
+          if (!updatedCharacter) {
+            return {
+              success: false,
+              error: 'Character not found'
+            };
+          }
+          return {
+            success: true,
+            character: updatedCharacter,
+            message: `Character "${updatedCharacter.name}" updated successfully`
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
+        }
+
+      case 'create_scene':
+        try {
+          const scene = this.sceneService.createScene(args);
+          return {
+            success: true,
+            scene,
+            message: `Scene "${scene.name}" created successfully with ID ${scene.id}`
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
+        }
+
+      case 'connect_scenes':
+        try {
+          const connection = this.sceneService.connectScenes(args);
+          return {
+            success: true,
+            connection,
+            message: `Connected scene ${args.from_scene_id} to scene ${args.to_scene_id} via ${args.connection_type}`
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
+        }
+
       case 'move_character':
         try {
           const character = this.characterService.getCharacterById(args.character_id);
@@ -464,14 +648,6 @@ export class ActionTools {
             error: error instanceof Error ? error.message : 'Unknown error'
           };
         }
-
-      case 'get_character_items':
-        const items = this.itemService.getItemsByCharacter(args.character_id);
-        return {
-          success: true,
-          items,
-          count: items.length
-        };
 
       default:
         return {

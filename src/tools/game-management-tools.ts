@@ -1,22 +1,43 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { CitizenshipApplicationService } from '../services/CitizenshipApplicationService.js';
-import { PermissionService } from '../services/PermissionService.js';
+import { IdentityService } from '../services/IdentityService.js';
 import { LoggingService } from '../services/LoggingService.js';
-import { PermissionLevel } from '../models/Permission.js';
+import { IdentityRole } from '../models/Identity.js';
 
-export class CitizenshipTools {
+export class GameManagementTools {
   private citizenshipService: CitizenshipApplicationService;
-  private permissionService: PermissionService;
+  private identityService: IdentityService;
   private loggingService: LoggingService;
 
   constructor() {
     this.citizenshipService = new CitizenshipApplicationService();
-    this.permissionService = new PermissionService();
+    this.identityService = new IdentityService();
     this.loggingService = new LoggingService();
   }
 
   getTools(): Tool[] {
     return [
+      // 身份验证工具
+      {
+        name: 'validate_identity',
+        description: 'Validate if a secret key has a specific capability',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            secret_key: {
+              type: 'string',
+              description: 'Secret key to validate'
+            },
+            required_capability: {
+              type: 'string',
+              description: 'Required capability to check'
+            }
+          },
+          required: ['secret_key', 'required_capability']
+        }
+      },
+
+      // 公民申请工具
       {
         name: 'apply_for_citizenship',
         description: 'Apply for citizenship (visitor only)',
@@ -52,34 +73,6 @@ export class CitizenshipTools {
         }
       },
       {
-        name: 'get_citizenship_application_status',
-        description: 'Get citizenship application status',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            character_id: {
-              type: 'string',
-              description: 'Character ID to check application status for'
-            }
-          },
-          required: ['character_id']
-        }
-      },
-      {
-        name: 'get_pending_citizenship_applications',
-        description: 'Get all pending citizenship applications (requires manager or super admin)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            admin_secret_key: {
-              type: 'string',
-              description: 'Admin secret key for authorization'
-            }
-          },
-          required: ['admin_secret_key']
-        }
-      },
-      {
         name: 'review_citizenship_application',
         description: 'Review a citizenship application (requires manager or super admin)',
         inputSchema: {
@@ -107,47 +100,11 @@ export class CitizenshipTools {
         }
       },
       {
-        name: 'get_character_basic_info',
-        description: 'Get basic character information (ID and permission level only)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            character_id: {
-              type: 'number',
-              description: 'Character ID to get info for'
-            }
-          },
-          required: ['character_id']
-        }
-      },
-      {
-        name: 'get_game_rules',
-        description: 'Get game rules and gameplay information',
-        inputSchema: {
-          type: 'object',
-          properties: {}
-        }
-      },
-      {
         name: 'generate_visitor_id',
         description: 'Generate a unique visitor character ID',
         inputSchema: {
           type: 'object',
           properties: {}
-        }
-      },
-      {
-        name: 'get_citizenship_application_stats',
-        description: 'Get citizenship application statistics (requires manager or super admin)',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            admin_secret_key: {
-              type: 'string',
-              description: 'Admin secret key for authorization'
-            }
-          },
-          required: ['admin_secret_key']
         }
       }
     ];
@@ -156,22 +113,14 @@ export class CitizenshipTools {
   async handleToolCall(name: string, args: any): Promise<any> {
     try {
       switch (name) {
+        case 'validate_identity':
+          return await this.validateIdentity(args);
         case 'apply_for_citizenship':
           return await this.applyForCitizenship(args);
-        case 'get_citizenship_application_status':
-          return await this.getApplicationStatus(args);
-        case 'get_pending_citizenship_applications':
-          return await this.getPendingApplications(args);
         case 'review_citizenship_application':
           return await this.reviewApplication(args);
-        case 'get_character_basic_info':
-          return await this.getCharacterBasicInfo(args);
-        case 'get_game_rules':
-          return await this.getGameRules(args);
         case 'generate_visitor_id':
           return await this.generateVisitorId(args);
-        case 'get_citizenship_application_stats':
-          return await this.getApplicationStats(args);
         default:
           return { success: false, error: `Unknown tool: ${name}` };
       }
@@ -181,6 +130,20 @@ export class CitizenshipTools {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  }
+
+  private async validateIdentity(args: any): Promise<any> {
+    const { secret_key, required_capability } = args;
+
+    const hasCapability = this.identityService.validateCapability(secret_key, required_capability);
+    const identityInfo = this.identityService.getIdentityInfo(secret_key);
+
+    return {
+      success: true,
+      has_capability: hasCapability,
+      identity_info: identityInfo,
+      message: hasCapability ? 'Capability granted' : 'Capability denied'
+    };
   }
 
   private async applyForCitizenship(args: any): Promise<any> {
@@ -219,58 +182,25 @@ export class CitizenshipTools {
     };
   }
 
-  private async getApplicationStatus(args: any): Promise<any> {
-    const { character_id } = args;
-
-    const application = this.citizenshipService.getApplicationByCharacterId(character_id);
-    if (!application) {
-      return { success: false, error: 'No application found for this character ID' };
-    }
-
-    return {
-      success: true,
-      application,
-      message: `Application status: ${application.status}`
-    };
-  }
-
-  private async getPendingApplications(args: any): Promise<any> {
-    const { admin_secret_key } = args;
-
-    // 验证管理员权限
-    if (!this.permissionService.validateMinimumPermission(admin_secret_key, PermissionLevel.MANAGER)) {
-      return { success: false, error: 'Insufficient permissions. Manager or Super Admin required.' };
-    }
-
-    const pendingApplications = this.citizenshipService.getPendingApplications();
-
-    return {
-      success: true,
-      applications: pendingApplications,
-      count: pendingApplications.length,
-      message: `Found ${pendingApplications.length} pending applications`
-    };
-  }
-
   private async reviewApplication(args: any): Promise<any> {
     const { admin_secret_key, application_id, status, review_message } = args;
 
-    // 验证管理员权限
-    if (!this.permissionService.validateMinimumPermission(admin_secret_key, PermissionLevel.MANAGER)) {
-      return { success: false, error: 'Insufficient permissions. Manager or Super Admin required.' };
+    // 验证管理员身份
+    if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.MANAGER)) {
+      return { success: false, error: 'Insufficient identity role. Manager or Super Admin required.' };
     }
 
     // 获取审核者信息
-    const adminPermission = this.permissionService.getPermissionBySecretKey(admin_secret_key);
-    if (!adminPermission || !adminPermission.character_id) {
-      return { success: false, error: 'Invalid admin permission' };
+    const adminIdentity = this.identityService.getIdentityBySecretKey(admin_secret_key);
+    if (!adminIdentity || !adminIdentity.character_id) {
+      return { success: false, error: 'Invalid admin identity' };
     }
 
     const reviewedApplication = this.citizenshipService.reviewApplication({
       application_id,
       status,
       review_message,
-      reviewer_character_id: adminPermission.character_id
+      reviewer_character_id: adminIdentity.character_id
     });
 
     if (!reviewedApplication) {
@@ -278,7 +208,7 @@ export class CitizenshipTools {
     }
 
     this.loggingService.logAction({
-      character_id: adminPermission.character_id,
+      character_id: adminIdentity.character_id,
       action_type: 'review_citizenship_application',
       action_data: JSON.stringify({ application_id, status, review_message }),
       result: `Application ${application_id} ${status}`
@@ -291,31 +221,6 @@ export class CitizenshipTools {
     };
   }
 
-  private async getCharacterBasicInfo(args: any): Promise<any> {
-    const { character_id } = args;
-
-    const characterInfo = this.citizenshipService.getCharacterBasicInfo(character_id);
-    if (!characterInfo) {
-      return { success: false, error: 'Character not found' };
-    }
-
-    return {
-      success: true,
-      character_info: characterInfo,
-      message: 'Character basic information retrieved'
-    };
-  }
-
-  private async getGameRules(args: any): Promise<any> {
-    const gameRules = this.citizenshipService.getGameRules();
-
-    return {
-      success: true,
-      game_rules: gameRules,
-      message: 'Game rules retrieved successfully'
-    };
-  }
-
   private async generateVisitorId(args: any): Promise<any> {
     const visitorId = this.citizenshipService.generateUniqueCharacterId();
 
@@ -323,23 +228,6 @@ export class CitizenshipTools {
       success: true,
       visitor_id: visitorId,
       message: 'Unique visitor ID generated successfully'
-    };
-  }
-
-  private async getApplicationStats(args: any): Promise<any> {
-    const { admin_secret_key } = args;
-
-    // 验证管理员权限
-    if (!this.permissionService.validateMinimumPermission(admin_secret_key, PermissionLevel.MANAGER)) {
-      return { success: false, error: 'Insufficient permissions. Manager or Super Admin required.' };
-    }
-
-    const stats = this.citizenshipService.getApplicationStats();
-
-    return {
-      success: true,
-      stats,
-      message: 'Citizenship application statistics retrieved successfully'
     };
   }
 }

@@ -31,7 +31,7 @@ export interface ReviewCitizenshipApplicationData {
 export interface CharacterInfo {
   id: number;
   name: string;
-  permission_level: string;
+  identity_role: string;
   // 其他详细信息不暴露给其他角色
 }
 
@@ -39,11 +39,11 @@ export interface GameRules {
   title: string;
   description: string;
   rules: string[];
-  permissions: {
+  identities: {
     [key: string]: {
       name: string;
       description: string;
-      permissions: string[];
+      capabilities: string[];
     };
   };
   gameplay: {
