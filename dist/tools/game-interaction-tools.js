@@ -263,7 +263,7 @@ export class GameInteractionTools {
             }
         ];
     }
-    async handleToolCall(name, args) {
+    async handleToolCall(name, args, context) {
         try {
             switch (name) {
                 case 'add_short_memory':

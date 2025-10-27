@@ -6,7 +6,7 @@ export declare class GameInteractionTools {
     private loggingService;
     constructor();
     getTools(): Tool[];
-    handleToolCall(name: string, args: any): Promise<any>;
+    handleToolCall(name: string, args: any, context?: any): Promise<any>;
     private addShortMemory;
     private addLongMemory;
     private updateShortMemory;

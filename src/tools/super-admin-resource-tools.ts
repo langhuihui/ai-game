@@ -109,7 +109,7 @@ export class SuperAdminResourceTools extends BaseTools {
     ];
   }
 
-  async handleToolCall(name: string, args: any) {
+  async handleToolCall(name: string, args: any, context?: any) {
     try {
       switch (name) {
         case 'mcp_admin_list_resources':

@@ -83,12 +83,18 @@ export class SceneService {
       throw new Error('One or both scenes do not exist');
     }
 
-    // Check if connection already exists
+    // Check if connection already exists in either direction
     const existingStmt = this.db.prepare(`
       SELECT id FROM scene_connections 
-      WHERE from_scene_id = ? AND to_scene_id = ?
+      WHERE (from_scene_id = ? AND to_scene_id = ?) 
+         OR (from_scene_id = ? AND to_scene_id = ?)
     `);
-    const existing = existingStmt.get(data.from_scene_id, data.to_scene_id);
+    const existing = existingStmt.get(
+      data.from_scene_id,
+      data.to_scene_id,
+      data.to_scene_id,
+      data.from_scene_id
+    );
 
     if (existing) {
       throw new Error('Connection already exists between these scenes');
@@ -99,14 +105,24 @@ export class SceneService {
       VALUES (?, ?, ?, ?)
     `);
 
-    const result = stmt.run(
+    // Create bidirectional connection by inserting two records
+    // Forward direction
+    const result1 = stmt.run(
       data.from_scene_id,
       data.to_scene_id,
       data.connection_type,
       data.description
     );
 
-    return this.getConnectionById(result.lastInsertRowid as number);
+    // Reverse direction
+    stmt.run(
+      data.to_scene_id,
+      data.from_scene_id,
+      data.connection_type,
+      data.description
+    );
+
+    return this.getConnectionById(result1.lastInsertRowid as number);
   }
 
   getConnectionById(id: number): SceneConnection | null {

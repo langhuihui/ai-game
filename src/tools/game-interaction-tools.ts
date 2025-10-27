@@ -270,7 +270,7 @@ export class GameInteractionTools {
     ];
   }
 
-  async handleToolCall(name: string, args: any): Promise<any> {
+  async handleToolCall(name: string, args: any, context?: any): Promise<any> {
     try {
       switch (name) {
         case 'add_short_memory':

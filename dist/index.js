@@ -694,6 +694,8 @@ class GameServer {
         this.mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
             const { name, arguments: args } = request.params;
             try {
+                // Note: MCP SDK doesn't provide direct access to HTTP headers in stdio/SSE transport
+                // The context will be populated when using the SSE/HTTP endpoint via handleMCPRequest
                 const result = await this.toolRouter.routeToolCall(name, args);
                 // Format the response
                 if (result.success) {
@@ -1111,7 +1113,14 @@ class GameServer {
             }
             else if (method === 'tools/call') {
                 const { name, arguments: args } = params;
-                const result = await this.toolRouter.routeToolCall(name, args);
+                // Create request context from headers
+                const secretKey = request.headers?.['x-secret-key'];
+                const characterId = request.headers?.['x-character-id'];
+                const context = {
+                    secretKey,
+                    characterId
+                };
+                const result = await this.toolRouter.routeToolCall(name, args, context);
                 if (!result.success) {
                     return {
                         jsonrpc: '2.0',
@@ -1323,7 +1332,14 @@ class GameServer {
             }
             else if (method === 'tools/call') {
                 const { name, arguments: args } = params;
-                const result = await this.toolRouter.routeToolCall(name, args);
+                // Create request context from headers
+                const secretKey = request.headers?.['x-secret-key'];
+                const characterId = request.headers?.['x-character-id'];
+                const context = {
+                    secretKey,
+                    characterId
+                };
+                const result = await this.toolRouter.routeToolCall(name, args, context);
                 if (!result.success) {
                     return {
                         jsonrpc: '2.0',

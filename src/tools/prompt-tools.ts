@@ -36,7 +36,7 @@ export class PromptTools {
     ];
   }
 
-  async handleToolCall(name: string, args: any): Promise<any> {
+  async handleToolCall(name: string, args: any, context?: any): Promise<any> {
     try {
       switch (name) {
         case 'mcp_list_prompts':

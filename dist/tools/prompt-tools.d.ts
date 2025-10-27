@@ -2,7 +2,7 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 export declare class PromptTools {
     private promptService;
     getTools(): Tool[];
-    handleToolCall(name: string, args: any): Promise<any>;
+    handleToolCall(name: string, args: any, context?: any): Promise<any>;
     private listPrompts;
     private getPrompt;
 }

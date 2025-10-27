@@ -32,7 +32,7 @@ export declare class SuperAdminResourceTools extends BaseTools {
      * 只包含管理和监控相关的关键资源
      */
     private getAdminResources;
-    handleToolCall(name: string, args: any): Promise<{
+    handleToolCall(name: string, args: any, context?: any): Promise<{
         success: boolean;
         resources: GameResource[];
         total_count: number;

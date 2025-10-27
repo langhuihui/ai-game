@@ -26,7 +26,7 @@ export declare class ResourceTools extends BaseTools {
             required: string[];
         };
     })[];
-    handleToolCall(name: string, args: any): Promise<{
+    handleToolCall(name: string, args: any, context?: any): Promise<{
         success: boolean;
         resources: import("../services/ResourceService.js").GameResource[];
         total_count: number;

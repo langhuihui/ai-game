@@ -1,9 +1,18 @@
 /**
+ * 请求上下文 - 包含当前请求的元数据
+ */
+export interface RequestContext {
+  secretKey?: string;
+  characterId?: string;
+  connectionId?: string;
+}
+
+/**
  * 工具路由器 - 用于优化工具调用的路由逻辑
  */
 export interface ToolHandler {
   getTools(): any[];
-  handleToolCall(name: string, args: any): Promise<any>;
+  handleToolCall(name: string, args: any, context?: RequestContext): Promise<any>;
 }
 
 export class ToolRouter {
@@ -19,11 +28,11 @@ export class ToolRouter {
   /**
    * 查找并执行工具调用
    */
-  async routeToolCall(name: string, args: any): Promise<any> {
+  async routeToolCall(name: string, args: any, context?: RequestContext): Promise<any> {
     for (const handler of this.handlers) {
       const tools = handler.getTools();
       if (tools.some((tool: any) => tool.name === name)) {
-        return await handler.handleToolCall(name, args);
+        return await handler.handleToolCall(name, args, context);
       }
     }
 

@@ -774,6 +774,8 @@ class GameServer {
       const { name, arguments: args } = request.params;
 
       try {
+        // Note: MCP SDK doesn't provide direct access to HTTP headers in stdio/SSE transport
+        // The context will be populated when using the SSE/HTTP endpoint via handleMCPRequest
         const result = await this.toolRouter.routeToolCall(name, args);
 
         // Format the response
@@ -1225,7 +1227,15 @@ class GameServer {
       } else if (method === 'tools/call') {
         const { name, arguments: args } = params;
 
-        const result = await this.toolRouter.routeToolCall(name, args);
+        // Create request context from headers
+        const secretKey = (request as any).headers?.['x-secret-key'] as string;
+        const characterId = (request as any).headers?.['x-character-id'] as string;
+        const context = {
+          secretKey,
+          characterId
+        };
+
+        const result = await this.toolRouter.routeToolCall(name, args, context);
 
         if (!result.success) {
           return {
@@ -1442,7 +1452,15 @@ class GameServer {
       } else if (method === 'tools/call') {
         const { name, arguments: args } = params;
 
-        const result = await this.toolRouter.routeToolCall(name, args);
+        // Create request context from headers
+        const secretKey = (request as any).headers?.['x-secret-key'] as string;
+        const characterId = (request as any).headers?.['x-character-id'] as string;
+        const context = {
+          secretKey,
+          characterId
+        };
+
+        const result = await this.toolRouter.routeToolCall(name, args, context);
 
         if (!result.success) {
           return {

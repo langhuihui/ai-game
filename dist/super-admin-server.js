@@ -284,7 +284,7 @@ export class SuperAdminServer {
         this.webApp.post('/mcp', express.json(), async (req, res) => {
             try {
                 console.log('📥 Received Super Admin MCP request:', JSON.stringify(req.body, null, 2));
-                const response = await this.handleMCPRequest(req.body);
+                const response = await this.handleMCPRequest(req.body, req.headers);
                 console.log('📤 Sending Super Admin MCP response:', JSON.stringify(response, null, 2));
                 res.json(response);
             }
@@ -303,7 +303,7 @@ export class SuperAdminServer {
             }
         });
     }
-    async handleMCPRequest(request) {
+    async handleMCPRequest(request, headers) {
         const { method, params, id } = request;
         console.log(`🔧 Handling Super Admin MCP request: method=${method}, id=${id}`);
         try {
@@ -344,9 +344,14 @@ export class SuperAdminServer {
             }
             else if (method === 'tools/call') {
                 const { name, arguments: args } = params;
+                // Create request context from headers
+                const secretKey = headers?.['x-secret-key'];
+                const context = {
+                    secretKey
+                };
                 let result;
                 if (this.superAdminTools.getTools().some(tool => tool.name === name)) {
-                    result = await this.superAdminTools.handleToolCall(name, args);
+                    result = await this.superAdminTools.handleToolCall(name, args, context);
                 }
                 else {
                     return {

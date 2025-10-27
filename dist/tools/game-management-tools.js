@@ -73,10 +73,6 @@ export class GameManagementTools {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        admin_secret_key: {
-                            type: 'string',
-                            description: 'Admin secret key for authorization'
-                        },
                         application_id: {
                             type: 'number',
                             description: 'Application ID to review'
@@ -91,7 +87,7 @@ export class GameManagementTools {
                             description: 'Optional review message'
                         }
                     },
-                    required: ['admin_secret_key', 'application_id', 'status']
+                    required: ['application_id', 'status']
                 }
             },
             {
@@ -104,7 +100,7 @@ export class GameManagementTools {
             }
         ];
     }
-    async handleToolCall(name, args) {
+    async handleToolCall(name, args, context) {
         try {
             switch (name) {
                 case 'validate_identity':
@@ -112,7 +108,7 @@ export class GameManagementTools {
                 case 'apply_for_citizenship':
                     return await this.applyForCitizenship(args);
                 case 'review_citizenship_application':
-                    return await this.reviewApplication(args);
+                    return await this.reviewApplication(args, context);
                 case 'generate_visitor_id':
                     return await this.generateVisitorId(args);
                 default:
@@ -167,8 +163,13 @@ export class GameManagementTools {
             message: 'Citizenship application submitted successfully. Please wait for admin review.'
         };
     }
-    async reviewApplication(args) {
-        const { admin_secret_key, application_id, status, review_message } = args;
+    async reviewApplication(args, context) {
+        const { application_id, status, review_message } = args;
+        // Get secret key from context
+        const admin_secret_key = context?.secretKey;
+        if (!admin_secret_key) {
+            return { success: false, error: 'Authentication required. Please provide X-Secret-Key header.' };
+        }
         // 验证管理员身份
         if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.MANAGER)) {
             return { success: false, error: 'Insufficient identity role. Manager or Super Admin required.' };

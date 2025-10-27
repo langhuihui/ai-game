@@ -6,6 +6,6 @@ export declare class GameCoreTools {
     private memoryService;
     private loggingService;
     getTools(): Tool[];
-    handleToolCall(name: string, args: any): Promise<any>;
+    handleToolCall(name: string, args: any, context?: any): Promise<any>;
 }
 //# sourceMappingURL=game-core-tools.d.ts.map

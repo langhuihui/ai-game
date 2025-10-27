@@ -37,7 +37,7 @@ export class ResourceTools extends BaseTools {
     ];
   }
 
-  async handleToolCall(name: string, args: any) {
+  async handleToolCall(name: string, args: any, context?: any) {
     try {
       switch (name) {
         case 'mcp_list_resources':

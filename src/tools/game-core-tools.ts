@@ -287,7 +287,7 @@ export class GameCoreTools {
     ];
   }
 
-  async handleToolCall(name: string, args: any): Promise<any> {
+  async handleToolCall(name: string, args: any, context?: any): Promise<any> {
     switch (name) {
       case 'create_character':
         try {

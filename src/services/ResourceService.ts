@@ -571,16 +571,16 @@ export class ResourceService {
   private getActiveTradeOffers(): any[] {
     const db = gameDb.getDatabase();
     return db.prepare(`
-      SELECT to.*, 
+      SELECT tof.*, 
              c1.name as from_character_name,
              c2.name as to_character_name,
              i.name as item_name
-      FROM trade_offers to
-      LEFT JOIN characters c1 ON to.from_character_id = c1.id
-      LEFT JOIN characters c2 ON to.to_character_id = c2.id
-      LEFT JOIN items i ON to.item_id = i.id
-      WHERE to.status = 'pending'
-      ORDER BY to.created_at DESC
+      FROM trade_offers tof
+      LEFT JOIN characters c1 ON tof.from_character_id = c1.id
+      LEFT JOIN characters c2 ON tof.to_character_id = c2.id
+      LEFT JOIN items i ON tof.item_id = i.id
+      WHERE tof.status = 'pending'
+      ORDER BY tof.created_at DESC
     `).all();
   }
 
@@ -590,16 +590,16 @@ export class ResourceService {
   private getTradeHistory(): any[] {
     const db = gameDb.getDatabase();
     return db.prepare(`
-      SELECT to.*, 
+      SELECT tof.*, 
              c1.name as from_character_name,
              c2.name as to_character_name,
              i.name as item_name
-      FROM trade_offers to
-      LEFT JOIN characters c1 ON to.from_character_id = c1.id
-      LEFT JOIN characters c2 ON to.to_character_id = c2.id
-      LEFT JOIN items i ON to.item_id = i.id
-      WHERE to.status IN ('accepted', 'rejected')
-      ORDER BY to.responded_at DESC
+      FROM trade_offers tof
+      LEFT JOIN characters c1 ON tof.from_character_id = c1.id
+      LEFT JOIN characters c2 ON tof.to_character_id = c2.id
+      LEFT JOIN items i ON tof.item_id = i.id
+      WHERE tof.status IN ('accepted', 'rejected')
+      ORDER BY tof.responded_at DESC
       LIMIT 50
     `).all();
   }

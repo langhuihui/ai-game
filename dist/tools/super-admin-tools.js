@@ -25,10 +25,6 @@ export class SuperAdminTools {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        admin_secret_key: {
-                            type: 'string',
-                            description: 'Super admin secret key for authorization'
-                        },
                         character_id: {
                             type: 'number',
                             description: 'Character ID to update'
@@ -42,7 +38,7 @@ export class SuperAdminTools {
                             description: 'Optional description of the identity change'
                         }
                     },
-                    required: ['admin_secret_key', 'character_id', 'new_identity']
+                    required: ['character_id', 'new_identity']
                 }
             },
             {
@@ -51,10 +47,6 @@ export class SuperAdminTools {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        admin_secret_key: {
-                            type: 'string',
-                            description: 'Super admin secret key for authorization'
-                        },
                         name: {
                             type: 'string',
                             description: 'Scene name'
@@ -64,7 +56,7 @@ export class SuperAdminTools {
                             description: 'Scene description'
                         }
                     },
-                    required: ['admin_secret_key', 'name', 'description']
+                    required: ['name', 'description']
                 }
             },
             {
@@ -73,10 +65,6 @@ export class SuperAdminTools {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        admin_secret_key: {
-                            type: 'string',
-                            description: 'Super admin secret key for authorization'
-                        },
                         name: {
                             type: 'string',
                             description: 'Item name'
@@ -94,7 +82,7 @@ export class SuperAdminTools {
                             description: 'Character ID to give the item to (optional)'
                         }
                     },
-                    required: ['admin_secret_key', 'name', 'description']
+                    required: ['name', 'description']
                 }
             },
             {
@@ -103,10 +91,6 @@ export class SuperAdminTools {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        admin_secret_key: {
-                            type: 'string',
-                            description: 'Super admin secret key for authorization'
-                        },
                         title: {
                             type: 'string',
                             description: 'Announcement title'
@@ -121,7 +105,7 @@ export class SuperAdminTools {
                             description: 'Announcement priority level'
                         }
                     },
-                    required: ['admin_secret_key', 'title', 'message']
+                    required: ['title', 'message']
                 }
             },
             {
@@ -130,10 +114,6 @@ export class SuperAdminTools {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        admin_secret_key: {
-                            type: 'string',
-                            description: 'Super admin secret key for authorization'
-                        },
                         character_id: {
                             type: 'number',
                             description: 'Character ID to modify'
@@ -159,24 +139,24 @@ export class SuperAdminTools {
                             description: 'New mental state value (optional)'
                         }
                     },
-                    required: ['admin_secret_key', 'character_id']
+                    required: ['character_id']
                 }
             }
         ];
     }
-    async handleToolCall(name, args) {
+    async handleToolCall(name, args, context) {
         try {
             switch (name) {
                 case 'admin_update_character_identity':
-                    return await this.updateCharacterIdentity(args);
+                    return await this.updateCharacterIdentity(args, context);
                 case 'admin_create_scene':
-                    return await this.createScene(args);
+                    return await this.createScene(args, context);
                 case 'admin_create_item':
-                    return await this.createItem(args);
+                    return await this.createItem(args, context);
                 case 'admin_send_announcement':
-                    return await this.sendAnnouncement(args);
+                    return await this.sendAnnouncement(args, context);
                 case 'admin_modify_character':
-                    return await this.modifyCharacter(args);
+                    return await this.modifyCharacter(args, context);
                 default:
                     return { success: false, error: `Unknown tool: ${name}` };
             }
@@ -188,8 +168,13 @@ export class SuperAdminTools {
             };
         }
     }
-    async updateCharacterIdentity(args) {
-        const { admin_secret_key, character_id, new_identity, description } = args;
+    async updateCharacterIdentity(args, context) {
+        const { character_id, new_identity, description } = args;
+        // Get secret key from context
+        const admin_secret_key = context?.secretKey;
+        if (!admin_secret_key) {
+            return { success: false, error: 'Authentication required. Please provide X-Secret-Key header.' };
+        }
         // Validate super admin identity
         if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
             return { success: false, error: 'Insufficient identity role. Super Admin required.' };
@@ -214,8 +199,13 @@ export class SuperAdminTools {
             message: `Character identity updated successfully`
         };
     }
-    async createScene(args) {
-        const { admin_secret_key, name, description } = args;
+    async createScene(args, context) {
+        const { name, description } = args;
+        // Get secret key from context
+        const admin_secret_key = context?.secretKey;
+        if (!admin_secret_key) {
+            return { success: false, error: 'Authentication required. Please provide X-Secret-Key header.' };
+        }
         // Validate super admin identity
         if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
             return { success: false, error: 'Insufficient identity role. Super Admin required.' };
@@ -236,8 +226,13 @@ export class SuperAdminTools {
             message: `Scene "${name}" created successfully`
         };
     }
-    async createItem(args) {
-        const { admin_secret_key, name, description, scene_id, character_id } = args;
+    async createItem(args, context) {
+        const { name, description, scene_id, character_id } = args;
+        // Get secret key from context
+        const admin_secret_key = context?.secretKey;
+        if (!admin_secret_key) {
+            return { success: false, error: 'Authentication required. Please provide X-Secret-Key header.' };
+        }
         // Validate super admin identity
         if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
             return { success: false, error: 'Insufficient identity role. Super Admin required.' };
@@ -261,8 +256,13 @@ export class SuperAdminTools {
             message: `Item "${name}" created successfully`
         };
     }
-    async sendAnnouncement(args) {
-        const { admin_secret_key, title, message, priority = 'normal' } = args;
+    async sendAnnouncement(args, context) {
+        const { title, message, priority = 'normal' } = args;
+        // Get secret key from context
+        const admin_secret_key = context?.secretKey;
+        if (!admin_secret_key) {
+            return { success: false, error: 'Authentication required. Please provide X-Secret-Key header.' };
+        }
         // Validate super admin identity
         if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
             return { success: false, error: 'Insufficient identity role. Super Admin required.' };
@@ -289,8 +289,13 @@ export class SuperAdminTools {
             message: `Announcement "${title}" sent successfully`
         };
     }
-    async modifyCharacter(args) {
-        const { admin_secret_key, character_id, name, description, personality, health, mental_state } = args;
+    async modifyCharacter(args, context) {
+        const { character_id, name, description, personality, health, mental_state } = args;
+        // Get secret key from context
+        const admin_secret_key = context?.secretKey;
+        if (!admin_secret_key) {
+            return { success: false, error: 'Authentication required. Please provide X-Secret-Key header.' };
+        }
         // Validate super admin identity
         if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
             return { success: false, error: 'Insufficient identity role. Super Admin required.' };

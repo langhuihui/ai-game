@@ -280,7 +280,7 @@ export class GameCoreTools {
             }
         ];
     }
-    async handleToolCall(name, args) {
+    async handleToolCall(name, args, context) {
         switch (name) {
             case 'create_character':
                 try {

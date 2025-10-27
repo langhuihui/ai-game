@@ -32,7 +32,7 @@ export class PromptTools {
             }
         ];
     }
-    async handleToolCall(name, args) {
+    async handleToolCall(name, args, context) {
         try {
             switch (name) {
                 case 'mcp_list_prompts':
