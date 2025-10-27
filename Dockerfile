@@ -15,6 +15,8 @@ RUN npm install --omit=dev
 
 # Copy built application
 COPY dist ./dist
+COPY src/views ./src/views
+COPY src/public ./src/public
 
 # Expose ports for web and super admin servers
 EXPOSE 3000
