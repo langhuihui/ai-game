@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  matrix-game:
+    build: .
+    container_name: matrix-game
+    ports:
+      - "3000:3000"  # Web server
+    volumes:
+      # Mount the database so data persists
+      - ./game.db:/app/game.db
+      # Optional: Mount source for development
+      # - ./src:/app/src
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
