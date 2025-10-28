@@ -6,6 +6,7 @@ export declare class SuperAdminTools {
     private itemService;
     private loggingService;
     private identityService;
+    private citizenshipService;
     constructor();
     getTools(): Tool[];
     handleToolCall(name: string, args: any, context?: RequestContext): Promise<any>;
@@ -14,5 +15,7 @@ export declare class SuperAdminTools {
     private createItem;
     private sendAnnouncement;
     private modifyCharacter;
+    private reviewCitizenshipApplication;
+    private listCitizenshipApplications;
 }
 //# sourceMappingURL=super-admin-tools.d.ts.map

@@ -4,6 +4,7 @@ import { SceneService } from '../services/SceneService.js';
 import { ItemService } from '../services/ItemService.js';
 import { LoggingService } from '../services/LoggingService.js';
 import { IdentityService } from '../services/IdentityService.js';
+import { CitizenshipApplicationService } from '../services/CitizenshipApplicationService.js';
 import { IdentityRole } from '../models/Identity.js';
 import { RequestContext } from '../utils/ToolRouter.js';
 
@@ -13,6 +14,7 @@ export class SuperAdminTools {
   private itemService: ItemService;
   private loggingService: LoggingService;
   private identityService: IdentityService;
+  private citizenshipService: CitizenshipApplicationService;
 
   constructor() {
     this.characterService = new CharacterService();
@@ -20,6 +22,7 @@ export class SuperAdminTools {
     this.itemService = new ItemService();
     this.loggingService = new LoggingService();
     this.identityService = new IdentityService();
+    this.citizenshipService = new CitizenshipApplicationService();
   }
 
   getTools(): Tool[] {
@@ -146,6 +149,43 @@ export class SuperAdminTools {
           },
           required: ['character_id']
         }
+      },
+      {
+        name: 'admin_review_citizenship_application',
+        description: 'Review and approve/reject citizenship application (requires super admin)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            application_id: {
+              type: 'number',
+              description: 'Application ID to review'
+            },
+            status: {
+              type: 'string',
+              enum: ['approved', 'rejected'],
+              description: 'Review decision'
+            },
+            review_message: {
+              type: 'string',
+              description: 'Optional review message'
+            }
+          },
+          required: ['application_id', 'status']
+        }
+      },
+      {
+        name: 'admin_list_citizenship_applications',
+        description: 'List all citizenship applications (requires super admin)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'string',
+              enum: ['pending', 'approved', 'rejected', 'all'],
+              description: 'Filter by status (optional, default: all)'
+            }
+          }
+        }
       }
     ];
   }
@@ -163,6 +203,10 @@ export class SuperAdminTools {
           return await this.sendAnnouncement(args, context);
         case 'admin_modify_character':
           return await this.modifyCharacter(args, context);
+        case 'admin_review_citizenship_application':
+          return await this.reviewCitizenshipApplication(args, context);
+        case 'admin_list_citizenship_applications':
+          return await this.listCitizenshipApplications(args, context);
         default:
           return { success: false, error: `Unknown tool: ${name}` };
       }
@@ -361,6 +405,95 @@ export class SuperAdminTools {
       success: true,
       character: updatedCharacter,
       message: `Character modified successfully`
+    };
+  }
+
+  private async reviewCitizenshipApplication(args: any, context?: RequestContext): Promise<any> {
+    const { application_id, status, review_message } = args;
+
+    // Get secret key from context
+    const admin_secret_key = context?.secretKey;
+    if (!admin_secret_key) {
+      return { success: false, error: 'Authentication required. Please provide X-Secret-Key header.' };
+    }
+
+    // Validate super admin identity
+    if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
+      return { success: false, error: 'Insufficient identity role. Super Admin required.' };
+    }
+
+    // Get reviewer identity
+    const adminIdentity = this.identityService.getIdentityBySecretKey(admin_secret_key);
+    if (!adminIdentity || !adminIdentity.character_id) {
+      return { success: false, error: 'Invalid admin identity' };
+    }
+
+    // Review application
+    const reviewedApplication = this.citizenshipService.reviewApplication({
+      application_id,
+      status,
+      review_message,
+      reviewer_character_id: adminIdentity.character_id
+    });
+
+    if (!reviewedApplication) {
+      return { success: false, error: 'Application not found or already reviewed' };
+    }
+
+    this.loggingService.logAction({
+      character_id: adminIdentity.character_id,
+      action_type: 'admin_review_citizenship_application',
+      action_data: JSON.stringify({ application_id, status, review_message }),
+      result: `Application ${application_id} ${status} by super admin`
+    });
+
+    return {
+      success: true,
+      application: reviewedApplication,
+      message: `Application ${status} successfully`
+    };
+  }
+
+  private async listCitizenshipApplications(args: any, context?: RequestContext): Promise<any> {
+    const { status = 'all' } = args;
+
+    // Get secret key from context
+    const admin_secret_key = context?.secretKey;
+    if (!admin_secret_key) {
+      return { success: false, error: 'Authentication required. Please provide X-Secret-Key header.' };
+    }
+
+    // Validate super admin identity
+    if (!this.identityService.validateMinimumRole(admin_secret_key, IdentityRole.SUPER_ADMIN)) {
+      return { success: false, error: 'Insufficient identity role. Super Admin required.' };
+    }
+
+    // Get applications based on status filter
+    let applications;
+    if (status === 'pending') {
+      applications = this.citizenshipService.getPendingApplications();
+    } else if (status === 'all') {
+      applications = this.citizenshipService.getAllApplications();
+    } else {
+      // Filter by specific status
+      const allApplications = this.citizenshipService.getAllApplications();
+      applications = allApplications.filter(app => app.status === status);
+    }
+
+    // Get statistics
+    const stats = this.citizenshipService.getApplicationStats();
+
+    this.loggingService.logAction({
+      action_type: 'admin_list_citizenship_applications',
+      action_data: JSON.stringify({ status }),
+      result: `Listed ${applications.length} applications`
+    });
+
+    return {
+      success: true,
+      applications,
+      stats,
+      message: `Found ${applications.length} applications`
     };
   }
 }
