@@ -9,12 +9,12 @@ block content
     .col-md-6
       h4
         i.bi.bi-code-slash.me-2
-        | SSE CONFIG / SSE配置 (推荐)
+        | LOCAL CONFIG / 本地配置
       .card
         .card-header.d-flex.justify-content-between.align-items-center
           span
             i.bi.bi-file-code.me-1
-            | mcp.json
+            | mcp.json (本地)
           button.btn.btn-sm.btn-outline-primary(onclick="copyToClipboard('sseConfig')")
             i.bi.bi-clipboard
             |  COPY / 复制
@@ -31,36 +31,82 @@ block content
     
     .col-md-6
       h4
+        i.bi.bi-globe.me-2
+        | PUBLIC CONFIG / 公网配置
+      .card
+        .card-header.d-flex.justify-content-between.align-items-center
+          span
+            i.bi.bi-file-code.me-1
+            | mcp.json (公网)
+          button.btn.btn-sm.btn-outline-primary(onclick="copyToClipboard('publicConfig')")
+            i.bi.bi-clipboard
+            |  COPY / 复制
+        .card-body
+          pre#publicConfig.mb-0
+            code.
+              {
+                "mcpServers": {
+                  "matrix": {
+                    "url": "https://matrix.langhuihui.com/mcp"
+                  }
+                }
+              }
+  
+  .row.mt-4
+    .col-md-12
+      h4
         i.bi.bi-power.me-2
         | BOOT SEQUENCE / 启动说明
       .card
         .card-body
-          h6
-            i.bi.bi-1-circle.me-1
-            | 启动矩阵服务器
-          pre.bg-light.p-2.rounded
-            code npm start
+          .row
+            .col-md-6
+              h6
+                i.bi.bi-laptop.me-1
+                | 本地部署
+              p.small 
+                i.bi.bi-1-circle.me-1
+                | 启动矩阵服务器
+              pre.bg-light.p-2.rounded
+                code npm start
+              p.small 
+                i.bi.bi-2-circle.me-1
+                | 复制左侧「本地配置」到 mcp.json 文件
+              p.small 
+                i.bi.bi-3-circle.me-1
+                | 重启 Cursor 编辑器
+              
+              .alert.alert-warning.mt-2
+                i.bi.bi-exclamation-triangle
+                |  
+                strong WARNING：
+                |  确保本地服务器正在运行
+            
+            .col-md-6
+              h6
+                i.bi.bi-globe.me-1
+                | 公网访问
+              p.small 
+                i.bi.bi-1-circle.me-1
+                | 无需启动本地服务器
+              p.small 
+                i.bi.bi-2-circle.me-1
+                | 复制右侧「公网配置」到 mcp.json 文件
+              p.small 
+                i.bi.bi-3-circle.me-1
+                | 重启 Cursor 编辑器
+              
+              .alert.alert-success.mt-2
+                i.bi.bi-check-circle
+                |  
+                strong ACCESS GRANTED：
+                |  直接连接公网服务器，无需本地部署
           
-          h6.mt-3
-            i.bi.bi-2-circle.me-1
-            | 配置 MCP 接口
-          p.small 复制上面的配置到 mcp.json 文件
-          
-          h6.mt-3
-            i.bi.bi-3-circle.me-1
-            | 重启 Cursor 编辑器
-          
-          .alert.alert-success.mt-3
-            i.bi.bi-check-circle
+          .alert.alert-info.mt-3
+            i.bi.bi-info-circle
             |  
-            strong ACCESS GRANTED：
+            strong TIP：
             |  SSE 连接支持真正的多人联机，所有客户端共享同一个矩阵世界！
-          
-          .alert.alert-warning.mt-3
-            i.bi.bi-exclamation-triangle
-            |  
-            strong WARNING：
-            |  确保矩阵服务器正在运行，否则 MCP 工具将无法使用。
   
   .row.mt-4
     .col-12
