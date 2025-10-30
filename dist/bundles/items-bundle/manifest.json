@@ -1,0 +1,30 @@
+{
+  "name": "items-bundle",
+  "version": "1.0.0",
+  "description": "Item system with inventory management and item behaviors",
+  "author": "Matrix Game",
+  "dependencies": [],
+  "commands": [
+    "PickCommand",
+    "DropCommand",
+    "UseCommand",
+    "CreateItemCommand",
+    "GetItemCommand",
+    "ListItemsCommand"
+  ],
+  "behaviors": {
+    "item": [
+      "health-potion",
+      "mental-tonic",
+      "poison",
+      "stress-relief",
+      "energy-drink"
+    ]
+  },
+  "entities": [
+    "Item"
+  ],
+  "events": [
+    "ItemEventListener"
+  ]
+}

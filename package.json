@@ -1,7 +1,7 @@
 {
   "name": "matrix-game",
-  "version": "1.0.0",
-  "description": "Matrix-inspired multiplayer text-based game server with MCP interfaces",
+  "version": "2.0.0",
+  "description": "Matrix-inspired multiplayer text-based game server with RanvierMUD architecture and MCP interfaces",
   "main": "dist/index.js",
   "bin": {
     "matrix-game": "./dist/index.js",
@@ -9,7 +9,10 @@
   },
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:src && npm run build:bundles && npm run copy:manifests",
+    "build:src": "tsc",
+    "build:bundles": "tsc -p bundles/tsconfig.json",
+    "copy:manifests": "for bundle in bundles/*/; do bundle_name=$(basename \"$bundle\"); mkdir -p \"dist/bundles/$bundle_name\"; [ -f \"$bundle/manifest.json\" ] && cp \"$bundle/manifest.json\" \"dist/bundles/$bundle_name/\"; done && rm -f dist/bundles/core && ln -sf ../core dist/bundles/core",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build"

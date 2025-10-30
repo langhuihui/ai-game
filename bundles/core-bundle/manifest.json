@@ -1,0 +1,32 @@
+{
+  "name": "core-bundle",
+  "version": "1.0.0",
+  "description": "Core game functionality including characters, scenes, and movement",
+  "author": "Matrix Game",
+  "dependencies": [],
+  "commands": [
+    "CreateCharacterCommand",
+    "GetCharacterCommand",
+    "ListCharactersCommand",
+    "UpdateCharacterCommand",
+    "CreateSceneCommand",
+    "GetSceneCommand",
+    "ListScenesCommand",
+    "ConnectScenesCommand",
+    "MoveCharacterCommand",
+    "SpeakPublicCommand",
+    "SpeakPrivateCommand"
+  ],
+  "behaviors": {
+    "character": [],
+    "scene": []
+  },
+  "entities": [
+    "Character",
+    "Scene"
+  ],
+  "events": [
+    "CharacterEventListener",
+    "SceneEventListener"
+  ]
+}

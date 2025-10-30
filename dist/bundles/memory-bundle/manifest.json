@@ -1,0 +1,21 @@
+{
+  "name": "memory-bundle",
+  "version": "1.0.0",
+  "description": "Memory management system for characters",
+  "author": "Matrix Game",
+  "dependencies": [
+    "core-bundle"
+  ],
+  "commands": [
+    "AddShortMemoryCommand",
+    "AddLongMemoryCommand",
+    "GetMemoriesCommand",
+    "UpdateMemoryCommand",
+    "DeleteMemoryCommand"
+  ],
+  "behaviors": {},
+  "entities": [],
+  "events": [
+    "MemoryEventListener"
+  ]
+}

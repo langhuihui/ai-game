@@ -1,0 +1,21 @@
+{
+  "name": "admin-bundle",
+  "version": "1.0.0",
+  "description": "Administrative commands and permission management",
+  "author": "Matrix Game",
+  "dependencies": [
+    "core-bundle"
+  ],
+  "commands": [
+    "CreateIdentityCommand",
+    "UpdateIdentityCommand",
+    "RevokeIdentityCommand",
+    "ListIdentitiesCommand",
+    "ValidateIdentityCommand"
+  ],
+  "behaviors": {},
+  "entities": [],
+  "events": [
+    "AdminEventListener"
+  ]
+}

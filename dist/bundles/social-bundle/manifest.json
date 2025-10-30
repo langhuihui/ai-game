@@ -1,0 +1,23 @@
+{
+  "name": "social-bundle",
+  "version": "1.0.0",
+  "description": "Social features including trading, messaging, and citizenship",
+  "author": "Matrix Game",
+  "dependencies": [
+    "core-bundle"
+  ],
+  "commands": [
+    "CreateTradeOfferCommand",
+    "RespondToTradeCommand",
+    "CancelTradeCommand",
+    "SendMessageCommand",
+    "ReadMessagesCommand",
+    "ApplyCitizenshipCommand",
+    "ReviewCitizenshipCommand"
+  ],
+  "behaviors": {},
+  "entities": [],
+  "events": [
+    "SocialEventListener"
+  ]
+}

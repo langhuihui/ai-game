@@ -1,0 +1,25 @@
+{
+  "name": "combat-bundle",
+  "version": "2.0.0",
+  "description": "Combat system with health, effects (buff/debuff), and damage over time",
+  "author": "Matrix Game",
+  "dependencies": [
+    "core-bundle"
+  ],
+  "commands": [
+    "ApplyEffectCommand",
+    "RemoveEffectCommand",
+    "ListEffectsCommand"
+  ],
+  "behaviors": {
+    "character": []
+  },
+  "entities": [],
+  "events": [
+    "CombatEventListener"
+  ],
+  "effects": [
+    "PoisonEffect",
+    "RegenerationEffect"
+  ]
+}

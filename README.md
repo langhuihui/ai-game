@@ -1,6 +1,16 @@
-# MCP Game Server
+# Matrix Game Server v2.0
 
-A multiplayer text-based game server built with Node.js and the Model Context Protocol (MCP). This server provides MCP interfaces for controlling characters, managing scenes, handling actions, and managing character memories in a text-based game world.
+A multiplayer text-based game server built with **RanvierMUD-inspired architecture** and the Model Context Protocol (MCP). This server features a modular bundle system, event-driven architecture, and scriptable behaviors for extensible game development.
+
+## 🎮 What's New in v2.0
+
+- **Bundle System**: Modular packages for organizing game features
+- **Event-Driven Architecture**: Decoupled components communicating via events
+- **Behavior System**: Scriptable entity behaviors for items, characters, and scenes
+- **Enhanced Modularity**: Easy to add, remove, or modify game features
+- **Backward Compatible**: All existing MCP tools still work
+
+For detailed architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## 🌍 Internationalization (国际化)
 
@@ -40,16 +50,37 @@ npm run build
 npm start
 ```
 
-## Server Architecture
+## Architecture
 
-The project consists of a single server with two MCP endpoints:
+Matrix Game v2.0 uses a RanvierMUD-inspired architecture:
 
-### Main Game Server (Port 3000)
+### Core Components
+
+1. **Core Engine** (`src/core/`)
+   - EventManager: Central event system
+   - EntityManager: Unified entity management
+   - BehaviorManager: Scriptable behaviors
+   - BundleLoader: Dynamic bundle loading
+   - GameState: Global game state management
+
+2. **Bundle System** (`bundles/`)
+   - **core-bundle**: Characters, scenes, movement
+   - **items-bundle**: Item system with scriptable behaviors
+   - **combat-bundle**: Health/mental state management
+   - **memory-bundle**: Auto-tracking memory system
+   - **social-bundle**: Trading, messaging, citizenship
+   - **admin-bundle**: Permission management
+
+3. **MCP Integration** (`src/mcp/`)
+   - ToolAdapter: Routes MCP calls to bundles
+   - CommandRegistry: Command management
+   - MCPServer: Protocol implementation
+
+### Server Endpoints (Port 3000)
 - **Main MCP URL**: `http://localhost:3000/mcp`
 - **Super Admin MCP URL**: `http://localhost:3000/admin/mcp`
-- **Purpose**: General game operations, character management, scene interactions
-- **Tools**: 60+ tools total (53+ game tools + 7 admin tools)
-- **Access**: Super Admin tools require Super Admin secret key
+- **Web Interface**: `http://localhost:3000`
+- **MCP Info**: `http://localhost:3000/mcp-info`
 
 ## MCP Tools
 
@@ -80,6 +111,11 @@ The project consists of a single server with two MCP endpoints:
 - `use_item`: Use item (consumes item, may affect stats)
 - `create_item`: Create new item
 - `get_character_items`: Get items owned by character
+
+### Effect System (Combat Bundle)
+- `apply_effect`: Apply a buff/debuff effect to a character (poison, regeneration, etc.)
+- `list_effects`: List all active effects on a character
+- `remove_effect`: Remove an effect from a character
 
 ### Memory Management
 - `add_short_memory`: Add short-term memory
@@ -125,6 +161,22 @@ The server includes predefined item effects:
 - `poison`: -30 health
 - `stress_relief`: +25 mental state
 - `energy_drink`: +10 health, +10 mental state
+
+## Effect System
+
+The combat bundle provides a complete effect system for managing buffs, debuffs, and continuous effects:
+
+### Available Effects
+- **Poison**: Damage over time (debuff)
+- **Regeneration**: Healing over time (buff)
+
+### Effect Features
+- Duration-based effects with automatic expiration
+- Stack management (max stacks, unique effects)
+- Effect tick system for DOT/HOT
+- Persistent effect storage across character reloads
+
+See [EFFECT_STORAGE.md](./EFFECT_STORAGE.md) for details.
 
 ## Web Interface
 
@@ -228,11 +280,51 @@ Open http://localhost:3000 in your browser to access the web interface and MCP c
 
 ## Development
 
-- `npm run build`: Compile TypeScript
-- `npm run dev`: Watch mode compilation
-- `npm start`: Run the server (Web interface + MCP info)
-- `npm run start:stdio`: Run MCP server in stdio mode
-- `npm run start:web`: Run web interface only
+### Building
+```bash
+npm run build    # Compile TypeScript
+npm run dev      # Watch mode compilation
+```
+
+### Running
+```bash
+npm start        # Full server (Web + MCP + SSE)
+npm start -- --web     # Web interface only
+npm start -- --stdio   # MCP stdio mode
+```
+
+### Creating Custom Bundles
+
+See [BUNDLE_DEVELOPMENT_GUIDE.md](./BUNDLE_DEVELOPMENT_GUIDE.md) for complete guide on:
+- Creating new bundles
+- Writing commands
+- Implementing behaviors
+- Adding event listeners
+- Testing bundles
+
+Quick reference: [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+### Example: Creating an Item Behavior
+
+```typescript
+// bundles/items-bundle/behaviors/item/super-potion.ts
+import { BehaviorDefinition } from '../../../../src/core/BehaviorManager.js';
+
+const superPotion: BehaviorDefinition = {
+  name: 'super-potion',
+  description: 'Fully restores health and mental state',
+  
+  async execute(entity, character) {
+    return {
+      health_change: 100 - character.health,
+      mental_state_change: 100 - character.mental_state,
+      description: 'You feel completely rejuvenated!'
+    };
+  }
+};
+
+export default superPotion;
+```
 
 ## License
 
